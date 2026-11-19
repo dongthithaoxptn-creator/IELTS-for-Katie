@@ -1,0 +1,5 @@
+# Cambridge recordings and book pages stay on this Mac only (they go to devices as packs)
+audio/
+books/
+.DS_Store
+__test*
