@@ -19,6 +19,9 @@
       '<div class="field"><label class="f" for="md">Marking model</label><select class="input" id="md">' + [['claude-opus-5-5', 'Claude Opus 5.5 — most accurate (recommended)'], ['claude-sonnet-5-5', 'Claude Sonnet 5.5 — faster, cheaper'], ['claude-haiku-5-5', 'Claude Haiku 5.5 — cheapest, less precise']].map(o => '<option value="' + o[0] + '"' + (st.model === o[0] ? ' selected' : '') + '>' + o[1] + '</option>').join('') + '</select></div></div>' +
       '<div class="row mt"><button class="btn" id="sv">Save</button><button class="btn ghost" id="tk">Test key</button><span id="tkr" class="muted"></span></div></div>' +
 
+      '<div class="card"><h2>Marking with your Claude plan (no API key)</h2><p class="muted">Use your Claude Pro plan instead of an API key. Set this up once:</p><ol><li>In the Claude app or claude.ai, create a <b>Project</b> called <b>IELTS Examiner</b>.</li><li>Press the button below and paste the text into the Project’s <b>instructions</b>.</li><li>After writing or speaking practice, press <b>Copy marking prompt</b> / <b>Copy for Claude chat</b>, paste it into a new chat in that Project, then paste Claude’s <span class="kbd">BANDS:</span> line back into the app.</li></ol>' +
+      '<button class="btn" id="pji">Copy Project instructions</button></div>' +
+
       '<div class="card"><h2>Grow your word bank</h2><p class="muted">Add new word families, phrasal verbs or collocations on any IELTS topic (needs the API key). New items are marked “AI-added” — check them against your Oxford or Collins books.</p>' +
       '<div class="grid g3"><div class="field"><label class="f" for="gk">Type</label><select class="input" id="gk"><option value="families">Word families</option><option value="phrasal">Phrasal verbs</option><option value="colloc">Collocations</option></select></div><div class="field"><label class="f" for="gt">Topic</label><input class="input" id="gt" placeholder="e.g. Health, Crime, Space" value="Environment"></div><div class="field"><label class="f" for="gn">How many</label><select class="input" id="gn"><option>5</option><option selected>10</option><option>15</option></select></div></div>' +
       '<div class="row mt"><button class="btn" id="gen">' + I('spark') + ' Generate</button><label class="btn ghost" style="cursor:pointer">Import JSON<input type="file" id="ij" accept=".json,application/json" hidden></label></div><div id="gout"></div></div>' +
@@ -32,6 +35,7 @@
       '<div class="card"><h2>Install as an app</h2><ul><li><b>iPad / iPhone (Safari):</b> Share → <i>Add to Home Screen</i>.</li><li><b>Mac (Safari):</b> File → <i>Add to Dock</i>. <b>Chrome:</b> the install icon in the address bar.</li></ul><p class="muted" style="margin:0">After adding it to your Home Screen, open it from there and import your book packs above. Progress and books are stored separately in each browser and on each device.</p></div></div>';
 
     const set = (k, val) => { st[k] = val; S.save(); };
+    U.$('#pji', v).onclick = () => App.copyText(App.ai.projectInstructions());
 
     const drawBooks = async () => {
       const packs = await App.media.packs(), box = U.$('#bookst', v); if (!box) return;

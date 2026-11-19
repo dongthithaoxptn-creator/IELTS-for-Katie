@@ -200,8 +200,50 @@ Mark FC ("fc"), LR ("lr"), GRA ("gra") and an indicative Pronunciation band ("pr
       if (kind === 'phrasal') return j.map(p => ({ p: p.x, vi: p.vi, d: p.def, ex: p.ex, lv: p.lv, ai: true }));
       return j.map(c => ({ c: c.x, vi: c.vi, ty: c.def, ex: c.ex, lv: c.lv, ai: true }));
     },
+    /* ---- marking in a Claude chat or Project (covered by a Claude Pro plan; no API key) ---- */
     manualPrompt(task, prompt, dataText, essay) {
-      return EXAMINER_RULES + '\n' + WRITING_DESCRIPTORS + '\n\n' + App.ai.writingPrompt(task, prompt, dataText, essay) + '\n\nGive a band (0–9, half bands allowed) for each criterion with evidence, then the overall band (average of the four, rounded to the nearest half band).';
-    }
+      return 'Please mark this IELTS Writing response as a strict IELTS examiner, following the official band descriptors (they are repeated below in case this chat has no examiner instructions).\n\n' +
+        App.ai.writingPrompt(task, prompt, dataText, essay) + '\n\n' + manualFormat(task === 1 ? 'TA' : 'TR', ['CC', 'LR', 'GRA']) +
+        '\n\n---\n' + EXAMINER_RULES + '\n' + WRITING_DESCRIPTORS;
+    },
+    manualSpeakingPrompt(parts, transcriptText, stats) {
+      return 'Please mark this IELTS Speaking practice as a strict IELTS examiner, following the official band descriptors (repeated below in case this chat has no examiner instructions).\n\nPractice: ' + parts + '\nTIMING DATA: ' + stats +
+        '\n\nTRANSCRIPT (Q = examiner question, A = my answer, with speaking time). It comes from speech recognition, so ignore missing punctuation. You cannot hear me, so give Pronunciation only as an indicative band and say so.\n\n' + transcriptText +
+        '\n\n' + manualFormat('FC', ['LR', 'GRA', 'P']) + '\n\n---\n' + EXAMINER_RULES + '\n' + SPEAKING_DESCRIPTORS;
+    },
+    projectInstructions() { return PROJECT_INSTRUCTIONS; }
   };
+
+  function manualFormat(first, rest) {
+    const line = 'BANDS: ' + [first].concat(rest).map(k => k + ' 6.5').join(' | ') + ' | OVERALL 6.5';
+    return 'Give for each criterion: the band (whole or half), quoted evidence, what limits it, and how to reach the next band. Then list the most important errors with corrections, better vocabulary, a Band 8 rewrite of the weakest paragraph or answer, and 3–5 next steps.\n' +
+      'Finish with ONE line in exactly this format (example numbers), so I can record it in my app:\n' + line;
+  }
+
+  const PROJECT_INSTRUCTIONS = `# IELTS Examiner — instructions for this Project
+
+${EXAMINER_RULES}
+
+## What I will send you
+- **Writing:** the task (Task 1 or Task 2, sometimes with a chart image or its data) and my answer. If I forget the task question, ask me for it before marking.
+- **Speaking:** a transcript of my answers with timing data (words, seconds, words per minute). It comes from speech recognition, so ignore missing punctuation. You cannot hear me, so Pronunciation can only be an indicative band; judge Fluency from the timing data, fillers, repetition and self-correction.
+- Messages copied from my IELTS Studio app already contain all of this. If I paste only an essay or transcript, mark it the same way.
+
+## How to mark
+1. For each criterion, quote my exact words as evidence, find the band whose descriptor my work FULLY fits, check the next band up and name the positive feature I am missing, and check limiting features (no overview in Task 1 caps Task Achievement at 5; under length; memorised or off-topic language; mechanical linking).
+2. Whole or half bands only. Writing overall = average of TA/TR, CC, LR, GRA rounded to the nearest half band (.25 rounds up to .5, .75 rounds up to the next band). Speaking overall = average of FC, LR and GRA (Pronunciation is indicative only).
+3. Then give: the most important errors (my exact words → correction → short reason), 5–10 vocabulary upgrades, a Band 8 rewrite of my weakest paragraph (Writing) or answer (Speaking), and 3–5 next steps ranked by how much they would raise my band.
+4. Explain in clear English. Add a short Vietnamese gloss in brackets after technical terms when helpful, e.g. "cohesive devices (từ nối)".
+
+## Always finish with one line in exactly this format
+Writing Task 1: BANDS: TA 6 | CC 6.5 | LR 6 | GRA 6 | OVERALL 6
+Writing Task 2: BANDS: TR 6 | CC 6.5 | LR 6 | GRA 6 | OVERALL 6
+Speaking: BANDS: FC 6 | LR 6 | GRA 6 | P 6 | OVERALL 6
+(I paste this line into my app to record my progress.)
+
+## Official band descriptors (public version, May 2023) — condensed
+${WRITING_DESCRIPTORS}
+
+${SPEAKING_DESCRIPTORS}
+`;
 })(window.App);

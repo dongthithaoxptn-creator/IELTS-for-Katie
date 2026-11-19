@@ -90,17 +90,22 @@
     const finish = () => {
       const totalW = answers.reduce((n, a) => n + U.words(a.a), 0), totalS = answers.reduce((n, a) => n + a.secs, 0);
       const wpm = totalS > 5 ? Math.round(totalW / (totalS / 60)) : null;
-      const rec = { ts: Date.now(), title, steps: steps.map((s, j) => ({ label: s.label, q: s.q, a: answers[j].a, secs: Math.round(answers[j].secs) })), words: totalW, secs: Math.round(totalS), wpm };
+      const stats = 'total speaking time ' + Math.round(totalS) + ' s; ' + totalW + ' words; ' + (wpm ? wpm + ' words per minute' : 'rate unknown (typed answers)') + '; input method: ' + (SR ? 'browser speech recognition' : 'typed');
+      const rec = { ts: Date.now(), title, mode, stats, steps: steps.map((s, j) => ({ label: s.label, q: s.q, a: answers[j].a, secs: Math.round(answers[j].secs) })), words: totalW, secs: Math.round(totalS), wpm };
       v.innerHTML = '<div class="wrap" style="max-width:900px"><a class="btn ghost sm mb" href="#/speaking">' + I('back') + ' Speaking</a><div class="card"><div class="eyebrow">' + U.esc(title) + '</div><h1>Well done</h1><div class="grid g3"><div class="stat"><small>Words spoken</small><b>' + totalW + '</b></div><div class="stat"><small>Speaking time</small><b>' + U.fmtClock(totalS) + '</b></div><div class="stat"><small>Speech rate</small><b>' + (wpm || '–') + '</b><small>words / minute (natural ≈ 120–160)</small></div></div>' +
-        '<div class="row mt"><button class="btn lg" id="mk">' + I('spark') + ' Get examiner feedback</button></div><div id="fb"></div></div>' +
+        '<div class="row mt"><button class="btn lg" id="cc">Copy for Claude chat</button><button class="btn lg ghost" id="mk">' + I('spark') + ' Mark in the app (API key)</button></div><div id="fb"></div></div>' +
         '<div class="card mt"><h3>Your transcript</h3>' + rec.steps.map(s => '<div style="padding:10px 0;border-bottom:1px solid var(--line)"><small>' + U.esc(s.label) + '</small><div><b>' + U.esc(s.q) + '</b></div><div style="font-family:var(--serif)">' + (s.a ? D.wrap(s.a) : '<i class="muted">no answer</i>') + '</div><small>' + s.secs + 's</small></div>').join('') + '</div></div>';
       S.s.speaking.push(rec); S.save();
       const idx = S.s.speaking.length - 1;
+      U.$('#cc', v).onclick = async () => {
+        await App.copyText(App.ai.manualSpeakingPrompt(title, transcriptText(), stats));
+        if (!U.$('#bpaste', v)) chatBand(U.$('#fb', v), idx, () => { U.$('#cc', v).remove(); U.$('#mk', v).remove(); });
+      };
       U.$('#mk', v).onclick = async () => {
-        if (!App.ai.enabled()) { U.$('#fb', v).innerHTML = '<p class="note mt">Add your Claude API key in <a href="#/settings">Settings</a> to get band scores and detailed feedback.</p>'; return; }
+        if (!App.ai.enabled()) { U.$('#fb', v).innerHTML = '<p class="note mt">Marking inside the app needs a Claude API key (Settings). With your Claude plan, use <b>Copy for Claude chat</b> instead — it’s free with Pro.</p>'; return; }
         const b = U.$('#mk', v); b.disabled = true; b.textContent = 'The examiner is listening back…';
         try {
-          const r = await App.ai.markSpeaking({ parts: title, transcriptText: transcriptText(), stats: 'total speaking time ' + Math.round(totalS) + ' s; ' + totalW + ' words; ' + (wpm ? wpm + ' words per minute' : 'rate unknown (typed answers)') + '; input method: ' + (SR ? 'browser speech recognition' : 'typed') });
+          const r = await App.ai.markSpeaking({ parts: title, transcriptText: transcriptText(), stats });
           S.s.speaking[idx].result = r; S.save();
           S.attempt({ skill: 'speaking', ref: mode, title, band: r.overall, crit: { fc: r.criteria.fc.band, lr: r.criteria.lr.band, gra: r.criteria.gra.band, pron: r.criteria.pron.band } });
           U.$('#fb', v).innerHTML = App.feedbackHTML(r, 'Speaking', NAMES);
@@ -110,9 +115,26 @@
     };
     intro();
   }
+  /* band entry after marking in a Claude chat / Project */
+  function chatBand(box, idx, done) {
+    App.bandEntry(box, { kind: 'speaking', intro: 'Paste the copied text into your <b>IELTS Examiner</b> Project in the Claude app (or any Claude chat). When Claude replies, paste its last line here.', onSave: r => {
+      const h = S.s.speaking[idx]; h.result = r; S.save();
+      const c = {}; Object.keys(r.criteria).forEach(k => { c[k] = r.criteria[k].band; });
+      S.attempt({ skill: 'speaking', ref: h.mode || 'chat', title: h.title, band: r.overall, crit: c, source: 'chat' });
+      box.innerHTML = App.manualResultHTML(r, 'speaking'); App.refreshNav(); if (done) done();
+    } });
+  }
+  const transcriptOf = h => h.steps.map(s => 'Q (' + s.label + '): ' + s.q + '\nA [' + s.secs + 's spoken, ' + U.words(s.a || '') + ' words]: ' + (s.a || '(no answer)')).join('\n\n');
   function viewHistory(v, idx) {
     const h = S.s.speaking[idx]; if (!h) { list(v); return; }
-    v.innerHTML = '<div class="wrap" style="max-width:900px"><a class="btn ghost sm mb" href="#/speaking">' + I('back') + ' Speaking</a><div class="card"><div class="eyebrow">' + U.fmtDate(h.ts) + '</div><h2>' + U.esc(h.title) + '</h2>' + h.steps.map(s => '<div style="padding:8px 0;border-bottom:1px solid var(--line)"><b>' + U.esc(s.q) + '</b><div style="font-family:var(--serif)">' + D.wrap(s.a || '—') + '</div></div>').join('') + '</div>' + (h.result ? App.feedbackHTML(h.result, 'Speaking', NAMES) : '') + '</div>';
+    const res = h.result ? (h.result.manual ? App.manualResultHTML(h.result, 'speaking') : App.feedbackHTML(h.result, 'Speaking', NAMES)) : '<div class="row mt"><button class="btn" id="cc">Copy for Claude chat</button></div><div id="fb"></div>';
+    v.innerHTML = '<div class="wrap" style="max-width:900px"><a class="btn ghost sm mb" href="#/speaking">' + I('back') + ' Speaking</a><div class="card"><div class="eyebrow">' + U.fmtDate(h.ts) + '</div><h2>' + U.esc(h.title) + '</h2>' + h.steps.map(s => '<div style="padding:8px 0;border-bottom:1px solid var(--line)"><b>' + U.esc(s.q) + '</b><div style="font-family:var(--serif)">' + D.wrap(s.a || '—') + '</div></div>').join('') + '</div>' + res + '</div>';
+    if (!h.result) {
+      U.$('#cc', v).onclick = async () => {
+        await App.copyText(App.ai.manualSpeakingPrompt(h.title, transcriptOf(h), h.stats || ('total speaking time ' + h.secs + ' s; ' + h.words + ' words' + (h.wpm ? '; ' + h.wpm + ' words per minute' : ''))));
+        if (!U.$('#bpaste', v)) chatBand(U.$('#fb', v), idx, () => viewHistory(v, idx));
+      };
+    }
   }
   App.views.speaking = (v, parts) => {
     if (!parts[0]) return list(v);

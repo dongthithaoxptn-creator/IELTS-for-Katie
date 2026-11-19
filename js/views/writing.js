@@ -91,6 +91,55 @@
       '<div class="card mt"><h3>Next steps</h3><ol>' + r.next_steps.map(s => '<li>' + U.esc(s) + '</li>').join('') + '</ol><p class="muted" style="margin:0"><small>AI marking follows the official public band descriptors and is strict by design, but it is still an estimate — read it as accurate to about ±0.5 band, the same margin trained examiners work within. Marked by' + U.esc(r.model || 'Claude') + '.</small></p></div>';
   };
 
+  /* ---------- band entry (marking done in a Claude chat / Project) ---------- */
+  const SETS = {
+    writing: t => [['task', t === 1 ? 'TA' : 'TR', t === 1 ? 'Task Achievement' : 'Task Response'], ['cc', 'CC', 'Coherence & Cohesion'], ['lr', 'LR', 'Lexical Resource'], ['gra', 'GRA', 'Grammatical Range & Accuracy']],
+    speaking: () => [['fc', 'FC', 'Fluency & Coherence'], ['lr', 'LR', 'Lexical Resource'], ['gra', 'GRA', 'Grammatical Range & Accuracy'], ['pron', 'P', 'Pronunciation (indicative)']]
+  };
+  const overallOf = (kind, c) => kind === 'writing' ? U.roundBand((c.task + c.cc + c.lr + c.gra) / 4) : U.roundBand((c.fc + c.lr + c.gra) / 3);
+  App.parseBands = function (text, kind) { // reads "BANDS: TR 6 | CC 6.5 | LR 6 | GRA 6 | OVERALL 6"
+    const alias = kind === 'writing' ? { TA: 'task', TR: 'task', CC: 'cc', LR: 'lr', GRA: 'gra' } : { FC: 'fc', LR: 'lr', GRA: 'gra', P: 'pron', PRON: 'pron', PR: 'pron' };
+    const lines = String(text).split('\n').filter(l => /BANDS?\s*:/i.test(l));
+    const src = lines.length ? lines[lines.length - 1] : String(text);
+    const out = {}; let m; const re = /\b(TA|TR|CC|LR|GRA|FC|PRON|PR|P)\b\s*[:=]?\s*(\d(?:[.,]5|[.,]0)?)/gi;
+    while ((m = re.exec(src))) { const k = alias[m[1].toUpperCase()]; const b = parseFloat(m[2].replace(',', '.')); if (k && b >= 0 && b <= 9) out[k] = b; }
+    return out;
+  };
+  App.bandEntry = function (box, { kind, task, intro, onSave }) {
+    const set = SETS[kind](task);
+    const opts = sel => '<option value="">–</option>' + Array.from({ length: 19 }, (_, i) => i / 2).reverse().map(b => '<option value="' + b + '"' + (sel === b ? ' selected' : '') + '>' + b.toFixed(1) + '</option>').join('');
+    box.innerHTML = '<div class="card mt"><h3>Record your band from Claude</h3>' + (intro ? '<p class="muted">' + intro + '</p>' : '') +
+      '<label class="f" for="bpaste">Paste Claude’s last line (it starts with <span class="kbd">BANDS:</span>) — or the whole reply</label><textarea class="input" id="bpaste" rows="2" placeholder="BANDS: ' + set.map(s => s[1] + ' 6').join(' | ') + ' | OVERALL 6"></textarea>' +
+      '<div class="grid g4 mt">' + set.map(s => '<div><label class="f" for="b_' + s[0] + '" title="' + s[2] + '">' + s[1] + ' <small class="muted">' + s[2] + '</small></label><select class="input" id="b_' + s[0] + '">' + opts() + '</select></div>').join('') + '</div>' +
+      '<div class="row between mt"><span>Overall: <b id="bov" style="font-size:1.3rem">–</b>' + (kind === 'speaking' ? ' <small class="muted">(FC, LR, GRA — pronunciation is indicative)</small>' : '') + '</span><button class="btn" id="bsave" disabled>' + I('check') + ' Save band</button></div></div>';
+    const get = () => { const c = {}; set.forEach(s => { const val = U.$('#b_' + s[0], box).value; c[s[0]] = val === '' ? null : +val; }); return c; };
+    const upd = () => {
+      const c = get(), need = kind === 'writing' ? ['task', 'cc', 'lr', 'gra'] : ['fc', 'lr', 'gra'];
+      const ok = need.every(k => c[k] != null);
+      U.$('#bov', box).textContent = ok ? U.bandStr(overallOf(kind, c)) : '–'; U.$('#bsave', box).disabled = !ok;
+    };
+    U.$('#bpaste', box).oninput = e => { const p = App.parseBands(e.target.value, kind); Object.keys(p).forEach(k => { const s = U.$('#b_' + k, box); if (s) s.value = String(p[k]); }); upd(); };
+    set.forEach(s => { U.$('#b_' + s[0], box).onchange = upd; });
+    U.$('#bsave', box).onclick = () => {
+      const c = get(), criteria = {};
+      set.forEach(s => { if (c[s[0]] != null) criteria[s[0]] = { band: c[s[0]] }; });
+      onSave({ manual: true, source: 'Claude chat', overall: overallOf(kind, c), criteria, ts: Date.now() });
+    };
+  };
+  App.manualResultHTML = function (r, kind, task) {
+    const set = SETS[kind](task);
+    return '<div class="card card-hero mt"><div class="row between"><div><div class="eyebrow" style="color:#8DB4EA">Marked in Claude chat</div><p style="margin:6px 0 0">The full feedback is in your Claude conversation. Your band is saved to Progress.</p></div><div style="text-align:center"><small>Overall</small><div class="band-big">' + U.bandStr(r.overall) + '</div></div></div>' +
+      '<div class="row mt" style="gap:8px">' + set.filter(s => r.criteria[s[0]]).map(s => '<span class="chip" style="background:rgba(255,255,255,.14);color:#fff">' + s[1] + ' ' + U.bandStr(r.criteria[s[0]].band) + '</span>').join('') + '</div></div>';
+  };
+  const showResult = (r, task) => r.manual ? App.manualResultHTML(r, 'writing', task) : App.feedbackHTML(r, 'Writing Task ' + task, CRIT_NAMES(task));
+  const critOf = r => { const o = {}; Object.keys(r.criteria).forEach(k => { o[k] = r.criteria[k].band; }); return o; };
+  async function copyText(txt) {
+    try { await navigator.clipboard.writeText(txt); U.toast('Copied — paste it into your IELTS Examiner Project in Claude'); }
+    catch (e) { U.modal('<h3>Copy this</h3><p class="muted">Select all and copy, then paste it into Claude.</p><textarea class="input" rows="12" readonly>' + U.esc(txt) + '</textarea><div class="row mt" style="justify-content:flex-end"><button class="btn" data-close>Close</button></div>'); }
+  }
+  App.copyText = copyText;
+  const CHAT_INTRO ='Paste the copied prompt into your <b>IELTS Examiner</b> Project in the Claude app (or any Claude chat). When Claude replies, paste its last line here.';
+
   /* ---------- screens ---------- */
   function list(v) {
     const hist = S.s.writing;
@@ -113,8 +162,16 @@
   function viewHistory(v, idx) {
     const h = S.s.writing[idx]; if (!h) { list(v); return; }
     v.innerHTML = '<div class="wrap"><a class="btn ghost sm mb" href="#/writing">' + I('back') + ' Writing</a><div class="card"><div class="eyebrow">Task ' + h.task + ' · ' + U.fmtDate(h.ts) + '</div><p style="white-space:pre-wrap">' + D.wrap(h.prompt) + '</p></div><div class="card"><h3>Your answer (' + h.words + ' words)</h3><div style="font-family:var(--serif);white-space:pre-wrap;line-height:1.7">' + U.esc(h.essay) + '</div></div>' +
-      (h.result ? App.feedbackHTML(h.result, 'Writing Task ' + h.task, CRIT_NAMES(h.task)) : '') +
-      '<div class="row mt"><a class="btn" href="#/writing/' + (h.ref || 'custom') + '">Write it again</a><button class="btn ghost danger" id="del" style="color:var(--bad)">Delete</button></div></div>';
+      (h.result ? showResult(h.result, h.task) : '<div id="bandbox"></div>') +
+      '<div class="row mt">' + (h.result ? '' : '<button class="btn ghost" id="cpy2">Copy marking prompt</button>') + '<a class="btn" href="#/writing/' + (h.ref || 'custom') + '">Write it again</a><button class="btn ghost danger" id="del" style="color:var(--bad)">Delete</button></div></div>';
+    if (!h.result) {
+      App.bandEntry(U.$('#bandbox', v), { kind: 'writing', task: h.task, intro: 'Not marked yet. ' + CHAT_INTRO, onSave: r => {
+        h.result = r; S.save();
+        S.attempt({ skill: 'writing', task: h.task, ref: h.ref, title: 'Task ' + h.task + ' · ' + h.title, band: r.overall, crit: critOf(r), source: 'chat' });
+        App.refreshNav(); viewHistory(v, idx);
+      } });
+      U.$('#cpy2', v).onclick = () => copyText(App.ai.manualPrompt(h.task, h.prompt, h.data || '', h.essay));
+    }
     U.$('#del', v).onclick = async () => { if (await U.confirm('Delete this essay and its feedback?', 'Delete')) { S.s.writing.splice(idx, 1); S.save(); App.go('#/writing'); } };
   }
   function editor(v, id, params) {
@@ -148,25 +205,42 @@
     };
     const promptText = () => custom ? U.$('#cp', v).value.trim() : w.prompt;
     const dText = () => custom ? ((U.$('#cd', v) || {}).value || '').trim() : dataText(w.chart);
+    let saved = null; // record created for this attempt (by copying or submitting)
+    const makeRec = a => ({ ts: Date.now(), task, ref: w.id, title: custom ? promptText().slice(0, 70) : w.title || w.prompt.slice(0, 70), prompt: promptText(), data: dText(), essay: ed.value, words: a.wc, secs: Math.round(t.elapsed()) });
+    const offerBandEntry = () => {
+      App.bandEntry(U.$('#fb', v), { kind: 'writing', task, intro: CHAT_INTRO, onSave: r => {
+        const a = upd();
+        if (!saved) { saved = makeRec(a); S.s.writing.push(saved); }
+        Object.assign(saved, { essay: ed.value, words: a.wc, secs: Math.round(t.elapsed()), result: r }); S.save();
+        S.attempt({ skill: 'writing', task, ref: w.id, title: 'Task ' + task + ' · ' + saved.title, band: r.overall, crit: critOf(r), source: 'chat' });
+        t.stop(); try { localStorage.removeItem(key); } catch (e) { /* ignore */ }
+        U.$('#fb', v).innerHTML = App.manualResultHTML(r, 'writing', task); App.refreshNav();
+      } });
+    };
     U.$('#cpy', v).onclick = async () => {
-      const txt = App.ai.manualPrompt(task, promptText(), dText(), ed.value);
-      try { await navigator.clipboard.writeText(txt); U.toast('Copied — paste it into a Claude chat'); } catch (e) { U.modal('<h3>Marking prompt</h3><textarea class="input" rows="12">' + U.esc(txt) + '</textarea><div class="row mt" style="justify-content:flex-end"><button class="btn" data-close>Close</button></div>'); }
+      if (custom && !promptText()) { U.toast('Paste the question first'); return; }
+      await copyText(App.ai.manualPrompt(task, promptText(), dText(), ed.value));
+      if (!U.$('#bpaste', v)) offerBandEntry();
     };
     U.$('#mark', v).onclick = async () => {
       const a = upd();
       U.$('#stats', v).innerHTML = '<h3>Quick analysis</h3>' + statsHTML(a); U.$('#stats', v).hidden = false;
       if (custom && !promptText()) { U.toast('Paste the question first'); return; }
       if (a.wc < 20) { U.toast('Write a bit more before submitting'); return; }
-      const rec = { ts: Date.now(), task, ref: w.id, title: custom ? promptText().slice(0, 70) : w.title || w.prompt.slice(0, 70), prompt: promptText(), essay: ed.value, words: a.wc, secs: Math.round(t.elapsed()) };
+      const rec = makeRec(a);
       if (!App.ai.enabled()) {
-        U.$('#fb', v).innerHTML = '<div class="card mt"><h3>Want a band score?</h3><p>Add your Claude API key in <a href="#/settings">Settings</a> for strict examiner-style marking, or press <b>Copy marking prompt</b> and paste it into a Claude chat.</p></div>';
-        S.s.writing.push(rec); S.save(); return;
+        if (!saved) { saved = rec; S.s.writing.push(rec); S.save(); }
+        offerBandEntry();
+        U.$('#fb', v).insertAdjacentHTML('afterbegin', '<div class="card mt"><h3>Mark it with your Claude plan</h3><p>Press <b>Copy marking prompt</b>, paste it into your IELTS Examiner Project in the Claude app, then record the band below. (With a Claude API key in <a href="#/settings">Settings</a>, the app can mark it directly instead.)</p></div>');
+        return;
       }
       const btn = U.$('#mark', v); btn.disabled = true; btn.textContent = 'Marking… (about 1 minute)';
       U.$('#fb', v).innerHTML = '<div class="card mt empty"><p>The examiner is reading your ' + (task === 1 ? 'report' : 'essay') + ' against each band descriptor…</p></div>';
       try {
         const r = await App.ai.markWriting({ task, prompt: rec.prompt, dataText: dText(), essay: ed.value, image });
-        rec.result = r; S.s.writing.push(rec); S.save();
+        rec.result = r;
+        if (saved && !saved.result) Object.assign(saved, rec); else { saved = rec; S.s.writing.push(rec); }
+        S.save();
         S.attempt({ skill: 'writing', task, ref: w.id, title: 'Task ' + task + ' · ' + rec.title, band: r.overall, crit: { task: r.criteria.task.band, cc: r.criteria.cc.band, lr: r.criteria.lr.band, gra: r.criteria.gra.band } });
         t.stop();
         try { localStorage.removeItem(key); } catch (e) { /* ignore */ }
