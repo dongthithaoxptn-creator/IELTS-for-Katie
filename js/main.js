@@ -8,23 +8,23 @@
   const SIDE = [
     ['home', 'Home', 'home'], ['vocab', 'Vocabulary', 'vocab'], ['quiz', 'Daily test', 'spark'],
     ['§', 'IELTS Builder'], ['ielts', 'Overview', 'grid'], ['reading', 'Reading', 'read'], ['listening', 'Listening', 'listen'], ['writing', 'Writing', 'write'], ['speaking', 'Speaking', 'speak'],
-    ['§', 'You'], ['progress', 'Progress', 'chart'], ['settings', 'Settings', 'gear']
+    ['§', 'You'], ['notes', 'My notes', 'note'], ['progress', 'Progress', 'chart'], ['settings', 'Settings', 'gear']
   ];
-  const TABS = [['home', 'Home', 'home'], ['vocab', 'Vocab', 'vocab'], ['ielts', 'IELTS', 'grid'], ['progress', 'Progress', 'chart'], ['settings', 'Settings', 'gear']];
+  const TABS = [['home', 'Home', 'home'], ['vocab', 'Vocab', 'vocab'], ['ielts', 'IELTS', 'grid'], ['notes', 'Notes', 'note'], ['progress', 'Progress', 'chart'], ['settings', 'Settings', 'gear']];
   const IELTS_SUB = ['ielts', 'reading', 'listening', 'writing', 'speaking'];
 
   function renderNav(route) {
     const est = App.bands.estimate();
-    U.$('#side').innerHTML = '<a class="brand" href="#/home"><span class="brand-mark">IS</span><span><b>IELTS Studio</b><small>Vocabulary · 4 skills</small></span></a>' +
-      SIDE.map(s => s[0] === '§' ? '<div class="nav-sec">' + s[1] + '</div>' : '<a class="nav-a' + (route === s[0] || (s[0] === 'vocab' && route === 'vocab') ? ' on' : '') + '" href="#/' + s[0] + '">' + I(s[2]) + '<span>' + s[1] + '</span></a>').join('') +
-      '<div class="side-foot"><span>Estimated overall</span><b>' + U.bandStr(est.overall) + '</b>' + (est.overall != null && !est.complete ? '<small style="color:#8DB4EA">from ' + ['listening', 'reading', 'writing', 'speaking'].filter(k => est[k] != null).length + ' of 4 skills</small>' : est.overall == null ? '<small style="color:#8DB4EA">Do a test to get a band</small>' : '') + '<div style="margin-top:8px">' + I('fire') + ' ' + App.streak() + '-day streak</div></div>';
+    U.$('#side').innerHTML = '<a class="brand" href="#/home"><img class="brand-mark" src="icons/katie-192.png" alt=""><span><b>Katie’s IELTS</b><small>Vocabulary · 4 skills</small></span></a>' +
+      SIDE.map(s => s[0] === '§' ? '<div class="nav-sec">' + s[1] + '</div>' : '<a class="nav-a' + (route === s[0] ? ' on' : '') + '" href="#/' + s[0] + '">' + I(s[2]) + '<span>' + s[1] + '</span>' + (s[0] === 'notes' && App.notes.count() ? '<small class="nav-count">' + App.notes.count() + '</small>' : '') + '</a>').join('') +
+      '<div class="side-foot"><span>Estimated overall</span><b>' + U.bandStr(est.overall) + '</b>' + (est.overall != null && !est.complete ? '<small>from ' + ['listening', 'reading', 'writing', 'speaking'].filter(k => est[k] != null).length + ' of 4 skills</small>' : est.overall == null ? '<small>Do a test to get a band</small>' : '') + '<div style="margin-top:8px">' + I('fire') + ' ' + App.streak() + '-day streak</div></div>';
     U.$('#tabbar').innerHTML = TABS.map(t => '<a href="#/' + t[0] + '" class="' + (route === t[0] || (t[0] === 'ielts' && IELTS_SUB.includes(route)) || (t[0] === 'vocab' && route === 'quiz') ? 'on' : '') + '">' + I(t[2]) + '<span>' + t[1] + '</span></a>').join('');
     U.$$('#side svg').forEach(s => { s.style.width = '20px'; s.style.height = '20px'; s.style.verticalAlign = '-4px'; });
   }
 
   function route() {
     App.cleanups.splice(0).forEach(fn => { try { fn(); } catch (e) { /* ignore */ } });
-    App.tts.stop(); App.dict.setGloss({});
+    App.tts.stop(); App.dict.setGloss({}); App.notes.detach();
     const raw = (location.hash || '#/home').slice(2);
     const [path, query] = raw.split('?');
     const parts = path.split('/').filter(Boolean).map(decodeURIComponent);
@@ -45,7 +45,7 @@
     const t = S.s.settings.theme;
     const dark = t === 'dark' || (t === 'auto' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
     document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-    const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = dark ? '#040D1A' : '#0B1F3A';
+    const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = dark ? '#0B1726' : '#EAF5FC';
   };
   if (window.matchMedia) matchMedia('(prefers-color-scheme: dark)').addEventListener('change', App.applyTheme);
 

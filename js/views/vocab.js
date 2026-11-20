@@ -6,6 +6,10 @@
   const POS = { v: 'verb', n: 'noun', 'n/v': 'noun / verb', adj: 'adjective', adv: 'adverb' };
   const ui = { tab: 'b', q: '', lv: '', st: '' };
   const unitItems = (sid, n) => App.units.list.filter(u => u.refs && u.refs.some(r => r.set === sid && r.n === n));
+  const N = App.notes;
+  const headOf = u => u.kind === 'f' ? u.f.r : u.p ? u.p.p : u.c.c;
+  const noteMeta = u => ({ kind: 'vocab', title: headOf(u), href: '#/vocab/item/' + encodeURIComponent(u.id) });
+  App.vocabNoteKey = id => 'v:' + id;
 
   function status(id) {
     const v = S.vs(id);
@@ -45,9 +49,9 @@
       });
       if (!items.length) { box.innerHTML = '<div class="empty">Nothing matches these filters.</div>'; return; }
       if (ui.tab === 'f') {
-        box.innerHTML = '<div class="grid gauto">' + items.map(u => '<a class="card fam-card" href="#/vocab/item/' + encodeURIComponent(u.id) + '"><div class="row between"><span class="root">' + U.esc(u.f.r) + '</span>' + status(u.id) + '</div><p class="muted" style="margin:6px 0 10px">' + u.f.m.map(m => U.esc(m[0])).join(' · ') + '</p><div class="row"><span class="chip">' + u.lv + '</span><span class="chip outline">' + U.esc(u.topic) + '</span>' + (u.f.ai ? '<span class="chip warn">AI-added</span>' : '') + '</div></a>').join('') + '</div>';
+        box.innerHTML = '<div class="grid gauto">' + items.map(u => '<a class="card fam-card" href="#/vocab/item/' + encodeURIComponent(u.id) + '"><div class="row between"><span class="root">' + U.esc(u.f.r) + N.mark('v:' + u.id) + '</span>' + status(u.id) + '</div><p class="muted" style="margin:6px 0 10px">' + u.f.m.map(m => U.esc(m[0])).join(' · ') + '</p><div class="row"><span class="chip">' + u.lv + '</span><span class="chip outline">' + U.esc(u.topic) + '</span>' + (u.f.ai ? '<span class="chip warn">AI-added</span>' : '') + '</div></a>').join('') + '</div>';
       } else {
-        box.innerHTML = items.map(u => { const x = u.p || u.c; const head = u.p ? x.p : x.c; return '<a class="list-item" href="#/vocab/item/' + encodeURIComponent(u.id) + '"><div class="grow"><h3>' + U.esc(head) + '</h3><div class="vi">' + U.esc(x.vi) + '</div><small>' + U.esc(x.ex) + '</small></div><div style="text-align:right" class="stack"><span class="chip">' + u.lv + '</span><div>' + status(u.id) + '</div></div></a>'; }).join('');
+        box.innerHTML = items.map(u => { const x = u.p || u.c; const head = u.p ? x.p : x.c; return '<a class="list-item" href="#/vocab/item/' + encodeURIComponent(u.id) + '"><div class="grow"><h3>' + U.esc(head) + N.mark('v:' + u.id) + '</h3><div class="vi">' + U.esc(x.vi) + '</div><small>' + U.esc(x.ex) + '</small></div><div style="text-align:right" class="stack"><span class="chip">' + u.lv + '</span><div>' + status(u.id) + '</div></div></a>'; }).join('');
       }
     };
     v.querySelector('.tabs').onclick = e => { const b = e.target.closest('[data-tab]'); if (b) { ui.tab = b.dataset.tab; list(v); } };
@@ -88,7 +92,7 @@
     const prev = sib[i - 1], next = sib[i + 1];
     const vs = S.vs(id);
     v.innerHTML = '<div class="wrap"><div class="row between mb"><a class="btn ghost sm" href="#/vocab">' + I('back') + ' ' + KIND[u.kind] + '</a><div class="row">' + status(id) + (vs.box ? '<small>' + vs.ok + ' right · ' + vs.bad + ' wrong</small>' : '') + '</div></div>' +
-      '<div class="card">' + App.vocabCard(u) + '</div>' +
+      '<div class="card">' + App.vocabCard(u) + N.box('v:' + id, noteMeta(u), { rows: 3 }) + '</div>' +
       '<div class="row mt between"><div class="row">' + (prev ? '<a class="btn ghost" href="#/vocab/item/' + encodeURIComponent(prev.id) + '">' + I('back') + ' Previous</a>' : '') + (next ? '<a class="btn ghost" href="#/vocab/item/' + encodeURIComponent(next.id) + '">Next ' + I('arrow') + '</a>' : '') + '</div>' +
       '<div class="row">' + (vs.box ? '<button class="btn ghost" id="unl">Reset</button><button class="btn soft" id="tst">' + I('spark') + ' Test this</button>' : '<button class="btn" id="lrn">' + I('check') + ' Mark as learned</button>') + '</div></div></div>';
     const lrn = U.$('#lrn', v); if (lrn) lrn.onclick = () => { S.learn(id); U.toast('Added to your learned words'); App.refreshNav(); detail(v, id); };
@@ -108,7 +112,7 @@
       const u = batch[i];
       v.innerHTML = '<div class="wrap"><div class="row between mb"><a class="btn ghost sm" href="' + back + '">' + I('back') + ' Back</a><div class="row"><span class="chip">' + U.esc(label) + '</span><b>' + (i + 1) + ' / ' + batch.length + '</b></div></div>' +
         '<div class="dots mb">' + batch.map((_, j) => '<i class="' + (j < i ? 'ok' : j === i ? 'cur' : '') + '"></i>').join('') + '</div>' +
-        '<div class="card">' + App.vocabCard(u) + '</div>' +
+        '<div class="card">' + App.vocabCard(u) + N.box('v:' + u.id, noteMeta(u), { ph: 'Add a note to help you remember this: your own example, a similar word, a Vietnamese tip…' }) + '</div>' +
         '<div class="row mt" style="justify-content:flex-end"><button class="btn ghost" id="skip">Skip</button><button class="btn lg" id="got">' + I('check') + ' Got it — next</button></div></div>';
       bindSay(v);
       U.$('#got', v).onclick = () => { S.learn(u.id); next(); };
@@ -134,7 +138,7 @@
       const all = App.units.list.filter(u => u.refs && u.refs.some(r => r.set === s.id)), lrn = all.filter(u => S.isLearned(u.id)).length;
       return '<div class="card mb"><div class="row between"><div><h2 style="margin:0">' + U.esc(s.title) + '</h2><small>' + s.units.length + ' units · ' + lrn + ' of ' + all.length + ' learned</small></div><span class="chip">' + (s.kind === 'c' ? 'Collocations' : 'Phrasal verbs') + '</span></div>' +
         '<div class="grid g2 mt" style="gap:10px">' + s.units.map(un => { const it = unitItems(s.id, un.n), l = it.filter(u => S.isLearned(u.id)).length;
-          return '<a class="list-item" style="margin:0" href="#/vocab/unit/' + s.id + '/' + un.n + '"><div class="grow"><b>Unit ' + un.n + ' · ' + U.esc(un.t) + '</b><div class="bar" style="height:6px;margin-top:8px"><i style="width:' + U.pct(l, it.length) + '%"></i></div></div><small>' + l + '/' + it.length + '</small></a>'; }).join('') + '</div></div>';
+          return '<a class="list-item" style="margin:0" href="#/vocab/unit/' + s.id + '/' + un.n + '"><div class="grow"><b>Unit ' + un.n + ' · ' + U.esc(un.t) + '</b>' + N.mark('u:' + s.id + ':' + un.n) + '<div class="bar" style="height:6px;margin-top:8px"><i style="width:' + U.pct(l, it.length) + '%"></i></div></div><small>' + l + '/' + it.length + '</small></a>'; }).join('') + '</div></div>';
     }).join('');
   }
   function unitPage(v, sid, n) {
@@ -145,7 +149,8 @@
       '<div class="page-head"><div><div class="eyebrow">' + U.esc(set.title) + ' · Unit ' + n + '</div><h1>' + U.esc(un.t) + '</h1><p>' + learned.length + ' of ' + items.length + ' learned</p></div>' +
       '<div class="row"><button class="btn ghost" id="ut">' + I('spark') + ' Test this unit</button><a class="btn" href="#/vocab/learn/u/' + sid + '/' + n + '">' + I('plus') + ' Learn 5 new</a></div></div>' +
       '<div class="bar mb"><i style="width:' + U.pct(learned.length, items.length) + '%"></i></div>' +
-      items.map(u => { const x = u.p || u.c, head = u.p ? x.p : x.c; return '<a class="list-item" href="#/vocab/item/' + encodeURIComponent(u.id) + '"><div class="grow"><h3>' + U.esc(head) + '</h3><div class="vi">' + U.esc(x.vi) + '</div><small>' + U.esc(x.ex) + '</small></div><div>' + status(u.id) + '</div></a>'; }).join('') + '</div>';
+      '<div class="card mb">' + N.box('u:' + sid + ':' + n, { kind: 'unit', title: set.short + ' · Unit ' + n + ' · ' + un.t, href: '#/vocab/unit/' + sid + '/' + n }, { label: 'My notes for this unit', ph: 'Notes for this unit: patterns you noticed, words that confuse you, things to revise…' }) + '</div>' +
+      items.map(u => { const x = u.p || u.c, head = u.p ? x.p : x.c, nt = N.get('v:' + u.id); return '<a class="list-item" href="#/vocab/item/' + encodeURIComponent(u.id) + '"><div class="grow"><h3>' + U.esc(head) + N.mark('v:' + u.id) + '</h3><div class="vi">' + U.esc(x.vi) + '</div><small>' + U.esc(x.ex) + '</small>' + (nt ? '<div class="nt clip mini">' + U.esc(nt) + '</div>' : '') + '</div><div>' + status(u.id) + '</div></a>'; }).join('') + '</div>';
     U.$('#ut', v).onclick = () => { const pool = (learned.length >= 5 ? learned : items).map(u => u.id); App.quiz.start(v, pool, { title: 'Unit ' + n + ' · ' + un.t, min: Math.min(15, Math.max(10, pool.length)) }); };
   }
 

@@ -18,8 +18,8 @@
     const recent = s.attempts.slice(-5).reverse();
 
     v.innerHTML = '<div class="wrap">' +
-      '<div class="card card-hero"><div class="row between" style="align-items:flex-start"><div><div class="eyebrow" style="color:#8DB4EA">' + U.esc(new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })) + '</div><h1 style="color:#fff">' + greet + '</h1><p class="muted" style="margin-bottom:14px">' + (due ? due + ' word' + (due > 1 ? 's are' : ' is') + ' due for review today.' : learned ? 'You’re up to date with reviews.' : 'Start by learning your first word families.') + '</p>' +
-      '<div class="row"><a class="btn light lg" href="#/quiz">' + I('spark') + ' Daily test</a><a class="btn soft lg" style="background:rgba(255,255,255,.12);color:#fff" href="#/vocab/learn/f">' + I('plus') + ' Learn new words</a></div></div>' +
+      '<div class="card card-hero"><div class="row between" style="align-items:flex-start"><div><div class="eyebrow">' + U.esc(new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })) + '</div><h1>' + greet + '</h1><p class="muted" style="margin-bottom:14px">' + (due ? due + ' word' + (due > 1 ? 's are' : ' is') + ' due for review today.' : learned ? 'You’re up to date with reviews.' : 'Start by learning your first word families.') + '</p>' +
+      '<div class="row"><a class="btn light lg" href="#/quiz">' + I('spark') + ' Daily test</a><a class="btn glass lg" href="#/vocab/learn/f">' + I('plus') + ' Learn new words</a></div></div>' +
       '<div style="text-align:right"><small>Estimated overall band</small><div class="band-big">' + U.bandStr(est.overall) + '</div><small>' + (est.overall != null ? 'CEFR ' + App.bands.cefr(est.overall) + ' · target ' + target.toFixed(1) : 'complete a test to see it') + '</small><div class="mt">' + countdown + '</div></div></div></div>' +
 
       '<div class="grid g4 mt">' +
@@ -34,7 +34,7 @@
       '<div class="grid g2 mt2">' +
       '<div class="card"><h3>Next word family</h3>' + (nextFam ? '<div class="fam-card"><div class="root">' + U.esc(nextFam.f.r) + '</div><p class="muted">' + nextFam.f.m.map(m => U.esc(m[0])).join(' · ') + '</p><a class="btn" href="#/vocab/item/' + encodeURIComponent(nextFam.id) + '">Study this family ' + I('arrow') + '</a></div>' : '<p class="muted">You’ve learned every family in the bank. Add more in Settings → Grow your word bank.</p>') + '</div>' +
       '<div class="card"><h3>Recent activity</h3>' + (recent.length ? recent.map(a => '<div class="row between" style="padding:8px 0;border-bottom:1px solid var(--line)"><span><b>' + U.esc(cap(a.skill)) + '</b> · ' + U.esc(a.title || '') + '<br><small>' + U.fmtDate(a.ts) + (a.raw != null ? ' · ' + a.raw + '/' + a.total : '') + '</small></span><span class="band-pill">' + U.bandStr(a.band) + '</span></div>').join('') : '<p class="muted">No tests yet. Try a <a href="#/reading">Reading</a> passage or a <a href="#/listening">Listening</a> section to get your first band estimate.</p>') + '</div>' +
-      '</div></div>';
+      '</div>' + (App.notes.count() ? '<div class="mt">' + App.notes.recentHTML(3) + '</div>' : '') + '</div>';
   };
   function cap(s) { return s ? s[0].toUpperCase() + s.slice(1) : ''; }
   App.util.cap = cap;

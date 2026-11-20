@@ -11,7 +11,7 @@
     let g = '';
     for (let b = 3; b <= 9; b++) g += '<line x1="' + L + '" x2="' + (L + pw) + '" y1="' + y(b) + '" y2="' + y(b) + '" stroke="currentColor" stroke-opacity=".12"/><text x="' + (L - 8) + '" y="' + (y(b) + 4) + '" font-size="11" text-anchor="end" fill="currentColor">' + b + '</text>';
     if (target) g += '<line x1="' + L + '" x2="' + (L + pw) + '" y1="' + y(target) + '" y2="' + y(target) + '" stroke="#E0A100" stroke-dasharray="5 4" stroke-width="1.5"/><text x="' + (L + pw) + '" y="' + (y(target) - 6) + '" font-size="11" text-anchor="end" fill="#B07A00">target ' + target.toFixed(1) + '</text>';
-    const colors = { listening: '#14A3A3', reading: '#2F6FD0', writing: '#8DB4EA', speaking: '#E0A100' };
+    const colors = { listening: '#14A3A3', reading: '#2F80C8', writing: '#8A7BEA', speaking: '#E0A100' };
     const all = points.flat(); if (!all.length) return '';
     const t0 = Math.min.apply(null, all.map(p => p.ts)), t1 = Math.max.apply(null, all.map(p => p.ts));
     const x = ts => L + (t1 === t0 ? pw / 2 : (ts - t0) / (t1 - t0) * pw);

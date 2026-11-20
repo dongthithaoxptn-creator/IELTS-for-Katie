@@ -2,7 +2,7 @@
 (function (App) {
   'use strict';
   const U = App.util, S = App.store, I = App.icon, D = App.dict;
-  const COLORS = ['#2F6FD0', '#14A3A3', '#8DB4EA', '#E0A100'];
+  const COLORS = ['#2F80C8', '#16A5A8', '#8A7BEA', '#E0A100'];
   const CRIT = { 1: { task: 'Task Achievement' }, 2: { task: 'Task Response' } };
   const CRIT_NAMES = t => ({ task: CRIT[t].task, cc: 'Coherence & Cohesion', lr: 'Lexical Resource', gra: 'Grammatical Range & Accuracy' });
   let tab = 1;
@@ -82,7 +82,7 @@
       '<div class="answer-note"><b>To reach the next band:</b> ' + U.esc(c.to_reach_next_band) + '</div></div>'; }).join('');
     const better = r.rewrite ? '<div class="card mt"><h3>Your weakest paragraph, rewritten at Band 8+</h3><div class="grid g2"><div><small>Original</small><p style="font-family:var(--serif)">' + U.esc(r.rewrite.original_paragraph) + '</p></div><div><small>Improved</small><p style="font-family:var(--serif)">' + D.wrap(r.rewrite.improved_paragraph) + '</p></div></div><p class="muted">' + U.esc(r.rewrite.why) + '</p></div>'
       : r.better_answer ? '<div class="card mt"><h3>Band 8 model answer</h3><p><b>' + U.esc(r.better_answer.question) + '</b></p><p style="font-family:var(--serif)">' + D.wrap(r.better_answer.model_answer) + '</p></div>' : '';
-    return '<div class="card card-hero mt"><div class="row between"><div><div class="eyebrow" style="color:#8DB4EA">' + U.esc(kind) + ' · examiner-style marking</div><p style="margin:6px 0 0;max-width:640px">' + U.esc(r.examiner_summary) + '</p></div><div style="text-align:center"><small>Overall</small><div class="band-big">' + U.bandStr(r.overall) + '</div>' + (r.withPron != null ? '<small>FC · LR · GRA<br>' + U.bandStr(r.withPron) + ' incl. indicative pronunciation</small>' : '') + '</div></div></div>' +
+    return '<div class="card card-hero mt"><div class="row between"><div><div class="eyebrow">' + U.esc(kind) + ' · examiner-style marking</div><p style="margin:6px 0 0;max-width:640px">' + U.esc(r.examiner_summary) + '</p></div><div style="text-align:center"><small>Overall</small><div class="band-big">' + U.bandStr(r.overall) + '</div>' + (r.withPron != null ? '<small>FC · LR · GRA<br>' + U.bandStr(r.withPron) + ' incl. indicative pronunciation</small>' : '') + '</div></div></div>' +
       '<div class="grid g2 mt">' + crit + '</div>' +
       '<div class="grid g2 mt"><div class="card"><h3 style="color:var(--ok)">Strengths</h3><ul>' + r.strengths.map(s => '<li>' + U.esc(s) + '</li>').join('') + '</ul></div><div class="card"><h3 style="color:var(--bad)">Weaknesses</h3><ul>' + r.weaknesses.map(s => '<li>' + U.esc(s) + '</li>').join('') + '</ul></div></div>' +
       (r.errors.length ? '<div class="card mt"><h3>Errors & corrections (' + r.errors.length + ')</h3>' + r.errors.map(e => '<div class="err"><span class="chip bad">' + U.esc(e.type) + '</span> <del>' + U.esc(e.quote) + '</del> → <ins>' + U.esc(e.correction) + '</ins><div class="muted" style="font-size:.9rem;margin-top:4px">' + U.esc(e.explanation) + '</div></div>').join('') + '</div>' : '') +
@@ -128,8 +128,8 @@
   };
   App.manualResultHTML = function (r, kind, task) {
     const set = SETS[kind](task);
-    return '<div class="card card-hero mt"><div class="row between"><div><div class="eyebrow" style="color:#8DB4EA">Marked in Claude chat</div><p style="margin:6px 0 0">The full feedback is in your Claude conversation. Your band is saved to Progress.</p></div><div style="text-align:center"><small>Overall</small><div class="band-big">' + U.bandStr(r.overall) + '</div></div></div>' +
-      '<div class="row mt" style="gap:8px">' + set.filter(s => r.criteria[s[0]]).map(s => '<span class="chip" style="background:rgba(255,255,255,.14);color:#fff">' + s[1] + ' ' + U.bandStr(r.criteria[s[0]].band) + '</span>').join('') + '</div></div>';
+    return '<div class="card card-hero mt"><div class="row between"><div><div class="eyebrow">Marked in Claude chat</div><p style="margin:6px 0 0">The full feedback is in your Claude conversation. Your band is saved to Progress.</p></div><div style="text-align:center"><small>Overall</small><div class="band-big">' + U.bandStr(r.overall) + '</div></div></div>' +
+      '<div class="row mt" style="gap:8px">' + set.filter(s => r.criteria[s[0]]).map(s => '<span class="chip glass">' + s[1] + ' ' + U.bandStr(r.criteria[s[0]].band) + '</span>').join('') + '</div></div>';
   };
   const showResult = (r, task) => r.manual ? App.manualResultHTML(r, 'writing', task) : App.feedbackHTML(r, 'Writing Task ' + task, CRIT_NAMES(task));
   const critOf = r => { const o = {}; Object.keys(r.criteria).forEach(k => { o[k] = r.criteria[k].band; }); return o; };
@@ -193,6 +193,7 @@
       '<p class="muted" style="font-size:.85rem">Spell-check is off, as in the real exam. Drafts save automatically on this device.</p></div></div>' +
       '<div id="stats" class="card mt" hidden></div><div id="fb"></div></div>';
     const ed = U.$('#ed', v), wc = U.$('#wc', v);
+    App.notes.attach('w:' + id + (custom ? task : ''), { kind: 'writing', title: 'Writing Task ' + task + ' · ' + w.title, href: '#/writing/' + id + (custom ? '?task=' + task : '') });
     const t = App.Q.timer(U.$('#tm', v), (task === 1 ? 20 : 40) * 60); App.onLeave(t.stop);
     const upd = () => { const a = analyse(ed.value, task); wc.textContent = a.wc; wc.style.color = a.wc >= a.min ? 'var(--ok)' : ''; try { localStorage.setItem(key, ed.value); } catch (e) { /* ignore */ } return a; };
     ed.oninput = upd; upd();

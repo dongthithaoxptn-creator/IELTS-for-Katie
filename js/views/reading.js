@@ -17,6 +17,7 @@
     v.innerHTML = '<div class="wrap" style="max-width:1300px"><div class="row between mb"><a class="btn ghost sm" href="#/reading">' + I('back') + ' Reading</a><div class="row"><span class="timer" id="tm"></span><button class="btn" id="sub">Submit answers</button></div></div>' +
       '<div class="split"><div class="pane card passage"><div class="eyebrow">' + U.esc(r.topic) + '</div><h2>' + U.esc(r.title) + '</h2>' + r.paras.map((p, i) => '<p><span class="pl">' + 'ABCDEFGH'[i] + '</span>' + D.wrap(p) + '</p>').join('') + '</div>' +
       '<div class="pane card" id="qs">' + Q.render(r.groups) + '<div id="result"></div></div></div></div>';
+    App.notes.attach('r:' + r.id, { kind: 'reading', title: 'Reading · ' + r.title, href: '#/reading/' + r.id });
     const t = Q.timer(U.$('#tm', v), (r.minutes || 20) * 60);
     App.onLeave(t.stop);
     U.$('#sub', v).onclick = async () => {
@@ -30,7 +31,7 @@
       S.attempt({ skill: 'reading', ref: r.id, title: r.title, raw: res.raw, total: res.total, band, secs: Math.round(t.elapsed()) });
       Q.show(qs, res);
       U.$('#sub', v).disabled = true;
-      U.$('#result', v).innerHTML = '<div class="card card-hero mt" style="text-align:center"><small>Score</small><div class="band-big">' + res.raw + '/' + res.total + '</div><p class="muted" style="margin:6px 0">Estimated Reading band <b style="color:#fff;font-size:1.3rem">' + U.bandStr(band) + '</b> (≈ ' + Math.round(res.raw / res.total * 40) + '/40) · time ' + U.fmtClock(t.elapsed()) + '</p><div class="row" style="justify-content:center"><a class="btn light" href="#/reading">More passages</a><button class="btn soft" style="background:rgba(255,255,255,.14);color:#fff" id="retry">Try again</button></div></div>';
+      U.$('#result', v).innerHTML = '<div class="card card-hero mt" style="text-align:center"><small>Score</small><div class="band-big">' + res.raw + '/' + res.total + '</div><p class="muted" style="margin:6px 0">Estimated Reading band <b style="font-size:1.3rem">' + U.bandStr(band) + '</b> (≈ ' + Math.round(res.raw / res.total * 40) + '/40) · time ' + U.fmtClock(t.elapsed()) + '</p><div class="row" style="justify-content:center"><a class="btn light" href="#/reading">More passages</a><button class="btn glass" id="retry">Try again</button></div></div>';
       U.$('#retry', v).onclick = () => test(v, id);
       U.$('#result', v).scrollIntoView({ behavior: 'smooth', block: 'center' });
       App.refreshNav();

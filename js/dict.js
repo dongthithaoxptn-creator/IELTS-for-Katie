@@ -80,6 +80,7 @@
     return '<div class="row mt">' +
       '<button class="btn sm soft" data-act="say">' + App.icon('sound') + ' UK</button>' +
       '<button class="btn sm soft" data-act="save">' + App.icon('plus') + ' Save</button>' +
+      (App.notes && App.notes.current ? '<button class="btn sm soft" data-act="note">' + App.icon('note') + ' Add to notes</button>' : '') +
       (hasAI ? '<button class="btn sm soft" data-act="vi">Tiếng Việt</button>' : '<a class="btn sm soft" target="_blank" rel="noopener" href="https://translate.google.com/?sl=en&tl=vi&text=' + encodeURIComponent(w) + '">Tiếng Việt ' + App.icon('ext') + '</a>') +
       '<a class="btn sm ghost" target="_blank" rel="noopener" href="' + ox + '">Oxford ' + App.icon('ext') + '</a></div><div id="pop-vi"></div>';
   }
@@ -122,6 +123,12 @@
         const m = entry.meanings && entry.meanings[0];
         S.s.saved.push({ w, ipa: entry.ipa || '', pos: entry.pos || (m && m.pos) || '', def: entry.def || (m && m.defs[0] && m.defs[0].d) || '', vi: entry.vi || '', ex: entry.ex || (m && m.defs[0] && m.defs[0].ex) || '', ctx: current && current.ctx || '', t: Date.now() });
         S.save(); U.toast('Saved to My words');
+      } else if (act === 'note') {
+        const m = entry.meanings && entry.meanings[0];
+        const mean = entry.vi || entry.def || (m && m.defs[0] && m.defs[0].d) || '';
+        const ctx = current && current.ctx ? ' (“' + current.ctx.trim().slice(0, 140) + '”)' : '';
+        App.notes.append(App.notes.current.key, '• ' + w + (mean ? ' — ' + mean : '') + ctx);
+        U.toast('Added “' + w + '” to your notes'); D.close();
       } else if (act === 'more') {
         const on = await D.online(w); p.innerHTML = renderOnline(w, on); bind(p, on && !on.error ? on : { w });
       } else if (act === 'vi') {

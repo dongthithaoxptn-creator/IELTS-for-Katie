@@ -74,10 +74,10 @@
 
     v.innerHTML = '<div class="wrap" style="max-width:1300px"><div class="row between mb"><a class="btn ghost sm" href="#/listening">' + I('back') + ' Listening</a><button class="btn" id="sub">Submit answers</button></div>' +
       '<div class="eyebrow">' + U.esc(b.title) + '</div><h1>Test ' + t.n + (full ? ' · Full listening test' : ' · Part ' + parts[0].p) + '</h1>' +
-      '<div class="player mb"><button class="btn light" id="play">' + I('play') + ' Start recording</button><div class="grow" style="flex:1;min-width:180px"><div class="row between" style="font-size:.85rem;color:#BCD3F2"><span id="lbl">' + (full ? 'Part 1 of 4' : 'Part ' + parts[0].p) + '</span><span id="time">0:00</span></div><div class="prog" style="margin-top:6px"><i id="bar"></i></div></div>' +
+      '<div class="player mb"><button class="btn light" id="play">' + I('play') + ' Start recording</button><div class="grow" style="flex:1;min-width:180px"><div class="row between" class="player-sub" style="font-size:.85rem"><span id="lbl">' + (full ? 'Part 1 of 4' : 'Part ' + parts[0].p) + '</span><span id="time">0:00</span></div><div class="prog" style="margin-top:6px"><i id="bar"></i></div></div>' +
       '<label class="row" style="gap:6px;font-size:.9rem"><input type="checkbox" id="exam" checked> Exam mode</label>' +
       '<select id="rate" aria-label="Speed" hidden><option value="0.8">0.8×</option><option value="0.9">0.9×</option><option value="1" selected>1×</option><option value="1.1">1.1×</option><option value="1.25">1.25×</option></select>' +
-      '<button class="btn soft" id="pause" hidden style="background:rgba(255,255,255,.14);color:#fff">' + I('pause') + '</button></div>' +
+      '<button class="btn glass" id="pause" hidden>' + I('pause') + '</button></div>' +
       '<audio id="au" preload="metadata"></audio>' +
       '<p class="muted" id="hint" style="margin-top:-6px">Exam mode: the recording plays once without pausing, like the real test. Read the questions before you start. Turn exam mode off to pause, rewind and change speed.</p>' +
       '<div class="split"><div class="pane card" id="paper"></div><div class="pane card" id="sheet"><h3>Answer sheet</h3>' +
@@ -85,6 +85,7 @@
         Array.from({ length: p.to - p.from + 1 }, (_, i) => p.from + i).map(q => '<div class="qitem" data-n="' + q + '"><div class="qnum">' + q + '</div><div class="qbody"><input class="input" name="q' + q + '" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Answer ' + q + '"></div></div>').join('') + '</div>').join('') +
       '</div></div><div id="result"></div></div>';
 
+    App.notes.attach('l:' + b.id + '-t' + t.n + (full ? '' : '-p' + parts[0].p), { kind: 'listening', title: title, href: '#/listening/' + b.id + '/' + t.n + '/' + which });
     const au = U.$('#au', v), play = U.$('#play', v), pause = U.$('#pause', v), bar = U.$('#bar', v), time = U.$('#time', v), lbl = U.$('#lbl', v), rate = U.$('#rate', v);
     const showPaper = i => {
       const p = parts[i];
@@ -138,7 +139,7 @@
         if (!r.ok) { const n = document.createElement('div'); n.className = 'answer-note'; n.innerHTML = 'Correct: <b>' + U.esc(r.correct) + '</b>'; el.querySelector('.qbody').appendChild(n); }
       });
       const scripts = [...new Set(parts.flatMap(p => p.script))];
-      U.$('#result', v).innerHTML = '<div class="card card-hero mt" style="text-align:center"><small>Score</small><div class="band-big">' + raw + '/' + qs.length + '</div><p class="muted" style="margin:6px 0">Estimated Listening band <b style="color:#fff;font-size:1.3rem">' + U.bandStr(band) + '</b>' + (qs.length < 40 ? ' (≈ ' + Math.round(raw / qs.length * 40) + '/40)' : '') + '. Exam mode is now off, so you can replay the recording and check what you missed.</p></div>' +
+      U.$('#result', v).innerHTML = '<div class="card card-hero mt" style="text-align:center"><small>Score</small><div class="band-big">' + raw + '/' + qs.length + '</div><p class="muted" style="margin:6px 0">Estimated Listening band <b style="font-size:1.3rem">' + U.bandStr(band) + '</b>' + (qs.length < 40 ? ' (≈ ' + Math.round(raw / qs.length * 40) + '/40)' : '') + '. Exam mode is now off, so you can replay the recording and check what you missed.</p></div>' +
         (scripts.length ? '<div class="card mt"><h3>Audioscript</h3>' + scripts.map(src => '<img src="' + U.esc(src) + '" alt="Audioscript" loading="lazy" style="width:100%;border-radius:10px;border:1px solid var(--line);margin-top:10px;background:#fff">').join('') + '</div>' : '');
       U.$('#exam', v).checked = false; st.exam = false; ui();
       U.$('#result', v).scrollIntoView({ behavior: 'smooth', block: 'center' });

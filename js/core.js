@@ -58,6 +58,7 @@ App.addBookSet = set => { const i = App.data.bookSets.findIndex(s => s.id === se
     play: '<path d="M6 4l14 8-14 8z"/>', pause: '<path d="M7 4h3v16H7zM14 4h3v16h-3z"/>', stop: '<rect x="5" y="5" width="14" height="14" rx="2"/>',
     check: '<path d="M20 6L9 17l-5-5"/>', x: '<path d="M18 6L6 18M6 6l12 12"/>', arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>', back: '<path d="M19 12H5M11 6l-6 6 6 6"/>',
     spark: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>', clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    note: '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/>',
     plus: '<path d="M12 5v14M5 12h14"/>', ext: '<path d="M14 4h6v6M20 4l-9 9M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/>', fire: '<path d="M12 2s5 5 5 10a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5 0 2 1 3 2 3 0-3-1-5 1-8.5z"/>'
   };
   App.icon = (n, cls = '') => '<svg class="ic ' + cls + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (P[n] || '') + '</svg>';
@@ -65,7 +66,7 @@ App.addBookSet = set => { const i = App.data.bookSets.findIndex(s => s.id === se
   /* ---------------- storage ---------------- */
   const KEY = 'ielts-studio-v1';
   const defaults = () => ({
-    v: 1, vocab: {}, saved: [], activity: {}, attempts: [], writing: [], speaking: [], dictCache: {},
+    v: 1, vocab: {}, saved: [], activity: {}, attempts: [], writing: [], speaking: [], dictCache: {}, notes: {},
     extra: { families: [], phrasal: [], colloc: [] },
     settings: { apiKey: '', model: 'claude-opus-5-5', target: 7, examDate: '', theme: 'auto', voice: '', rate: 0.95, quizSize: 10 },
     meta: { startDay: U.dayKey(), created: Date.now() }

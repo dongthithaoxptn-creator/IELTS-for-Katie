@@ -28,6 +28,7 @@
   function session(v, mode, id) {
     const { steps, title } = buildSteps(mode, id);
     const answers = steps.map(() => ({ a: '', secs: 0 }));
+    App.notes.attach('sp:' + mode + (mode === 'mock' ? '' : ':' + id), { kind: 'speaking', title: 'Speaking · ' + (mode === 'mock' ? 'Full mock tests' : title), href: '#/speaking/' + mode + (mode === 'mock' ? '' : '/' + id) });
     let i = -1, rec = null, recording = false, recStart = 0, base = '', finalTxt = '', tick = null;
     const stopRec = () => { recording = false; if (rec) { try { rec.stop(); } catch (e) { /* ignore */ } } clearInterval(tick); if (recStart) { answers[i].secs += (Date.now() - recStart) / 1000; recStart = 0; } };
     App.onLeave(() => { stopRec(); App.busy = false; });
