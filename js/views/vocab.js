@@ -25,7 +25,7 @@
   function list(v) {
     const UN = App.units;
     const kinds = ['f', 'p', 'c'];
-    const prog = kinds.map(k => { const all = UN.of(k), l = all.filter(u => S.isLearned(u.id)).length; return '<div class="card stat" style="padding:16px"><small>' + KIND[k] + '</small><b>' + l + '<span style="font-size:1rem;color:var(--muted)"> / ' + all.length + '</span></b><div class="bar mt"><i style="width:' + U.pct(l, all.length) + '%"></i></div></div>'; }).join('');
+    const prog = kinds.map(k => { const all = UN.of(k), l = all.filter(u => S.isLearned(u.id)).length; return '<div class="card stat tint" data-c="' + ({ f: 'lav', p: 'aqua', c: 'mint' })[k] + '" style="padding:16px"><small>' + KIND[k] + '</small><b>' + l + '<span style="font-size:1rem;color:var(--muted)"> / ' + all.length + '</span></b><div class="bar mt"><i style="width:' + U.pct(l, all.length) + '%"></i></div></div>'; }).join('');
     v.innerHTML = '<div class="wrap"><div class="page-head"><div><div class="eyebrow">Vocabulary builder</div><h1>Your word bank</h1><p>' + UN.wordsLearned() + ' of ' + UN.wordsTotal() + ' words learned · ' + UN.due().length + ' due for review</p></div>' +
       '<div class="row"><a class="btn ghost" href="#/quiz">' + I('spark') + ' Test me</a><a class="btn" href="#/vocab/learn/' + (ui.tab === 's' || ui.tab === 'b' ? 'f' : ui.tab) + '">' + I('plus') + ' Learn 5 new</a></div></div>' +
       '<div class="grid g3 mb">' + prog + '</div>' +
@@ -134,9 +134,10 @@
   function booksHTML() {
     const sets = App.data.bookSets;
     if (!sets.length) return '<div class="empty">Vocabulary from your books (English Collocations in Use, English Phrasal Verbs in Use…) isn’t on this device yet.<br>Import the <b>vocab.zip</b> pack in <a href="#/settings">Settings → Cambridge books on this device</a>.</div>';
-    return sets.map(s => {
+    const BOOKC = ['lav', 'aqua', 'mint', 'pink', 'peach'];
+    return sets.map((s, si) => {
       const all = App.units.list.filter(u => u.refs && u.refs.some(r => r.set === s.id)), lrn = all.filter(u => S.isLearned(u.id)).length;
-      return '<div class="card mb"><div class="row between"><div><h2 style="margin:0">' + U.esc(s.title) + '</h2><small>' + s.units.length + ' units · ' + lrn + ' of ' + all.length + ' learned</small></div><span class="chip">' + (s.kind === 'c' ? 'Collocations' : 'Phrasal verbs') + '</span></div>' +
+      return '<div class="card mb tint" data-c="' + BOOKC[si % BOOKC.length] + '"><div class="row between"><div><h2 style="margin:0">' + U.esc(s.title) + '</h2><small>' + s.units.length + ' units · ' + lrn + ' of ' + all.length + ' learned</small></div><span class="chip">' + (s.kind === 'c' ? 'Collocations' : 'Phrasal verbs') + '</span></div>' +
         '<div class="grid g2 mt" style="gap:10px">' + s.units.map(un => { const it = unitItems(s.id, un.n), l = it.filter(u => S.isLearned(u.id)).length;
           return '<a class="list-item" style="margin:0" href="#/vocab/unit/' + s.id + '/' + un.n + '"><div class="grow"><b>Unit ' + un.n + ' · ' + U.esc(un.t) + '</b>' + N.mark('u:' + s.id + ':' + un.n) + '<div class="bar" style="height:6px;margin-top:8px"><i style="width:' + U.pct(l, it.length) + '%"></i></div></div><small>' + l + '/' + it.length + '</small></a>'; }).join('') + '</div></div>';
     }).join('');

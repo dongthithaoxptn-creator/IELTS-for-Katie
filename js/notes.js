@@ -4,6 +4,7 @@
   const U = App.util, S = App.store, I = App.icon;
   const KINDS = { vocab: 'Words', unit: 'Book units', reading: 'Reading', listening: 'Listening', writing: 'Writing', speaking: 'Speaking' };
   const all = () => S.s.notes || (S.s.notes = {});
+  const KC = { vocab: 'lav', unit: 'sky', reading: 'mint', listening: 'aqua', writing: 'lilac', speaking: 'peach' };
   const meta = {}; // key -> { kind, title, href } for notes shown on the current screen
   const timers = {};
 
@@ -124,7 +125,7 @@
     const draw = () => {
       const q = U.norm(ui.q);
       const items = N.list().filter(n => (!ui.kind || n.kind === ui.kind) && (!q || U.norm(n.title + ' ' + n.t).includes(q)));
-      U.$('#nl', v).innerHTML = items.length ? items.map(n => '<div class="card note-card" data-key="' + U.esc(n.key) + '"><div class="row between"><div class="row" style="gap:8px"><span class="chip">' + U.esc(KINDS[n.kind] || n.kind) + '</span>' + (n.href ? '<a href="' + U.esc(n.href) + '"><b>' + U.esc(n.title || 'Open') + '</b></a>' : '<b>' + U.esc(n.title) + '</b>') + '</div><small class="muted">' + ago(n.ts) + '</small></div>' +
+      U.$('#nl', v).innerHTML = items.length ? items.map(n => '<div class="card note-card tint" data-c="' + (KC[n.kind] || 'butter') + '" data-key="' + U.esc(n.key) + '"><div class="row between"><div class="row" style="gap:8px"><span class="chip">' + U.esc(KINDS[n.kind] || n.kind) + '</span>' + (n.href ? '<a href="' + U.esc(n.href) + '"><b>' + U.esc(n.title || 'Open') + '</b></a>' : '<b>' + U.esc(n.title) + '</b>') + '</div><small class="muted">' + ago(n.ts) + '</small></div>' +
         (n.t && n.t.trim() ? '<div class="nt mt">' + U.esc(n.t) + '</div>' : '<div class="nt mt" hidden></div>') + App.ink.thumbs(n.key) + '<div class="row mt"><button class="btn sm ghost" data-edit>' + (n.t && n.t.trim() ? 'Edit' : 'Add text') + '</button><button class="btn sm ghost" data-ink-open="' + U.esc(n.key) + '" data-page="">' + I('write') + ' Handwrite</button>' + (n.href ? '<a class="btn sm soft" href="' + U.esc(n.href) + '">Open ' + I('arrow') + '</a>' : '') + '<span class="spacer"></span><button class="btn sm ghost" data-del>Delete</button></div></div>').join('')
         : '<div class="empty">No notes match.</div>';
     };
@@ -146,7 +147,7 @@
   /* ---------- recent notes on Home ---------- */
   App.notes.recentHTML = function (n = 3) {
     const L = N.list().slice(0, n); if (!L.length) return '';
-    return '<div class="card"><div class="row between"><h3 style="margin:0">' + I('note') + ' From your notes</h3><a class="btn sm ghost" href="#/notes">All notes</a></div>' +
+    return '<div class="card tint" data-c="butter"><div class="row between"><h3 style="margin:0">' + I('note') + ' From your notes</h3><a class="btn sm ghost" href="#/notes">All notes</a></div>' +
       L.map(x => '<div class="recent-note"><a href="' + U.esc(x.href || '#/notes') + '"><b>' + U.esc(x.title || KINDS[x.kind]) + '</b></a> <small class="muted">· ' + ago(x.ts) + (x.ink ? ' · ✍️ ' + x.ink + ' handwritten page' + (x.ink > 1 ? 's' : '') : '') + '</small>' + (x.t && x.t.trim() ? '<div class="nt clip">' + U.esc(x.t) + '</div>' : '') + '</div>').join('') + '</div>';
   };
 })(window.App);
