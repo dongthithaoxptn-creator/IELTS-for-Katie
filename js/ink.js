@@ -57,8 +57,10 @@
     }
     ctx.restore();
   }
-  function renderPage(page, px) { // -> data URL thumbnail
-    const c = document.createElement('canvas'), sc = px / W; c.width = px; c.height = Math.round(H * sc);
+  function renderPage(page, px) { // -> data URL preview, cropped to the part of the page you wrote on
+    let maxY = 0; page.s.forEach(s => { for (let i = 1; i < s.p.length; i += 3) maxY = Math.max(maxY, s.p[i] + s.w); });
+    const ch = Math.min(H, Math.max(380, maxY + 70));
+    const c = document.createElement('canvas'), sc = px / W; c.width = px; c.height = Math.round(ch * sc);
     const ctx = c.getContext('2d'); background(ctx, page.bg, sc);
     // highlighters first so the ink stays on top
     page.s.filter(s => s.h).forEach(s => drawStroke(ctx, s, sc)); page.s.filter(s => !s.h).forEach(s => drawStroke(ctx, s, sc));
@@ -71,7 +73,7 @@
     const key = box.dataset.ink, rec = (App.notes.raw(key) || {});
     if (!rec.ink) { box.innerHTML = ''; return; }
     let t = thumbCache[key];
-    if (!t || t.ts !== rec.ts) { const pages = await load(key); t = thumbCache[key] = { ts: rec.ts, urls: pages.map(p => renderPage(p, 260)) }; }
+    if (!t || t.ts !== rec.ts) { const pages = await load(key); t = thumbCache[key] = { ts: rec.ts, urls: pages.map(p => renderPage(p, 420)) }; }
     box.innerHTML = t.urls.map((u, i) => '<button type="button" class="ink-thumb" data-ink-open="' + U.esc(key) + '" data-page="' + i + '" aria-label="Open handwritten page ' + (i + 1) + '"><img src="' + u + '" alt=""><small>Page ' + (i + 1) + '</small></button>').join('');
   }
   App.ink = {

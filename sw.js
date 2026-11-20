@@ -1,5 +1,5 @@
 /* Offline cache for IELTS Studio (network-first for app files so updates arrive; API calls are never cached) */
-const CACHE = 'ielts-studio-v15';
+const CACHE = 'ielts-studio-v16';
 const FILES = ['./', 'index.html', 'css/app.css', 'manifest.webmanifest', 'icons/katie-64.png', 'icons/katie-180.png', 'icons/katie-192.png', 'icons/katie-512.png', 'icons/katie-512-maskable.png',
   'js/core.js', 'js/dict.js', 'js/notes.js', 'js/ink.js', 'js/ai.js', 'js/media.js', 'js/main.js',
   'js/data/vocab.js', 'js/data/phrases.js', 'js/data/reading.js', 'js/data/books.js', 'js/data/writing.js', 'js/data/speaking.js',
