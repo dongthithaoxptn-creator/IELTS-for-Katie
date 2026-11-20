@@ -142,7 +142,7 @@
     const block = el.closest('p,li,.script-line,.qbody,.node,div');
     const txt = (block ? block.textContent : '').replace(/\s+/g, ' ');
     const w = el.textContent; const sents = txt.split(/(?<=[.!?])\s+/);
-    return (sents.find(s => s.includes(w)) || txt).slice(0, 300);
+    return (sents.find(s => s.includes(w)) || txt).replace(/^\s*[A-H](?=[A-Z][a-z])/, '').slice(0, 300); // drop the paragraph letter (A, B…)
   }
   document.addEventListener('click', e => {
     const w = e.target.closest('span.w');

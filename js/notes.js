@@ -91,7 +91,10 @@
   });
   document.addEventListener('focusout', e => { // save at once when you leave the box
     const ta = e.target.closest && e.target.closest('textarea.notes-ta'); if (!ta) return;
-    const key = ta.dataset.nkey; if (timers[key]) { clearTimeout(timers[key]); timers[key] = null; N.set(key, ta.value); }
+    const key = ta.dataset.nkey; if (timers[key]) {
+      clearTimeout(timers[key]); timers[key] = null; N.set(key, ta.value);
+      const box = ta.closest('[data-nbox], #notesheet'), st = box && box.querySelector('.nstat'); if (st) st.textContent = ta.value.trim() ? 'Saved ✓' : 'Empty note removed';
+    }
   });
   window.addEventListener('pagehide', () => U.$$('textarea.notes-ta').forEach(ta => { const k = ta.dataset.nkey; if (timers[k]) { clearTimeout(timers[k]); N.set(k, ta.value); } }));
 
