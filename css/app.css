@@ -284,7 +284,7 @@ html.ink-open #modal{z-index:100} html.ink-open #toast{z-index:101}
 .ink-title{display:flex;flex-direction:column;min-width:0;max-width:220px}
 .ink-title small{color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.08em}
 .ink-title b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ink-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;flex:1}
+.ink-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;order:3;flex-basis:100%}
 .ink-group{display:flex;gap:4px;align-items:center;background:var(--softer);border:1px solid var(--line);border-radius:12px;padding:3px}
 .ink-group .sw{width:30px;height:30px;border-radius:50%;border:3px solid #fff;background:var(--c);cursor:pointer;box-shadow:0 0 0 1px var(--line)}
 .ink-group .sw.on{box-shadow:0 0 0 2px var(--btn)}

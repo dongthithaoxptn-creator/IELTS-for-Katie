@@ -153,7 +153,7 @@
     fgC.addEventListener('pointerdown', e => {
       if (e.pointerType === 'pen') { penSeen = true; fgC.style.touchAction = 'pan-y'; }
       else if (e.pointerType === 'touch' && penSeen) return; // fingers scroll once you use the Pencil
-      e.preventDefault(); fgC.setPointerCapture(e.pointerId);
+      e.preventDefault(); try { fgC.setPointerCapture(e.pointerId); } catch (err) { /* keep drawing without capture */ }
       if (tool.mode === 'erase') { snapshot(); drawing = { erase: true, id: e.pointerId }; eraseAt(pt(e)); return; }
       const s = tool.mode === 'hl' ? { c: tool.hl, w: 34, h: 1, p: [] } : { c: tool.color, w: SIZES[tool.size], p: [] };
       s.p.push(...pt(e)); drawing = { s, id: e.pointerId };
