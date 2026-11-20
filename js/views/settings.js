@@ -45,7 +45,7 @@
           (pk ? '<button class="btn sm ghost" data-rm="' + b.id + '">Remove</button>' : ok ? '<span class="chip ok">Ready</span>' : '<span class="chip warn">Import ' + b.id + '.zip</span>') + '</div>';
       }));
       const vp = packs.find(p => p.id === 'vocab'), vs = App.data.bookSets.length;
-      rows.push('<div class="list-item"><div class="grow"><b>Vocabulary from your books</b><br><small>' + (vp ? 'Imported ' + U.fmtDate(vp.ts) + ' · ' + vs + ' books' : vs ? 'Available from the app folder · ' + vs + ' books' : 'Not on this device') + '</small></div>' +
+      rows.push('<div class="list-item"><div class="grow"><b>Vocabulary from your books</b><br><small>' + (vp ? 'Imported ' + U.fmtDate(vp.ts) + ' · ' + vs + (vs === 1 ? ' book' : ' books') : vs ? 'Available from the app folder · ' + vs + (vs === 1 ? ' book' : ' books') : 'Not on this device') + '</small></div>' +
         (vp ? '<button class="btn sm ghost" data-rm="vocab">Remove</button>' : vs ? '<span class="chip ok">Ready</span>' : '<span class="chip warn">Import vocab.zip</span>') + '</div>');
       const u = await App.media.usage();
       box.innerHTML = rows.join('') + (u ? '<p class="muted mt" style="margin-bottom:0"><small>Storage used by this app: ' + Math.round((u.usage || 0) / 1048576) + ' MB' + (u.quota ? ' of about ' + Math.round(u.quota / 1073741824) + ' GB available' : '') + '</small></p>' : '');
