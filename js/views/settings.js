@@ -44,6 +44,9 @@
         return '<div class="list-item"><div class="grow"><b>' + U.esc(b.title) + '</b><br><small>' + (pk ? 'Imported ' + U.fmtDate(pk.ts) + ' · ' + Math.round(pk.bytes / 1048576) + ' MB' : ok ? 'Available from the app folder' : 'Not on this device') + '</small></div>' +
           (pk ? '<button class="btn sm ghost" data-rm="' + b.id + '">Remove</button>' : ok ? '<span class="chip ok">Ready</span>' : '<span class="chip warn">Import ' + b.id + '.zip</span>') + '</div>';
       }));
+      const vp = packs.find(p => p.id === 'vocab'), vs = App.data.bookSets.length;
+      rows.push('<div class="list-item"><div class="grow"><b>Vocabulary from your books</b><br><small>' + (vp ? 'Imported ' + U.fmtDate(vp.ts) + ' · ' + vs + ' books' : vs ? 'Available from the app folder · ' + vs + ' books' : 'Not on this device') + '</small></div>' +
+        (vp ? '<button class="btn sm ghost" data-rm="vocab">Remove</button>' : vs ? '<span class="chip ok">Ready</span>' : '<span class="chip warn">Import vocab.zip</span>') + '</div>');
       const u = await App.media.usage();
       box.innerHTML = rows.join('') + (u ? '<p class="muted mt" style="margin-bottom:0"><small>Storage used by this app: ' + Math.round((u.usage || 0) / 1048576) + ' MB' + (u.quota ? ' of about ' + Math.round(u.quota / 1073741824) + ' GB available' : '') + '</small></p>' : '');
       U.$$('[data-rm]', box).forEach(bt => bt.onclick = async () => { if (await U.confirm('Remove ' + bt.dataset.rm + ' from this device? You can import it again later.', 'Remove')) { await App.media.remove(bt.dataset.rm); drawBooks(); } });
@@ -52,7 +55,7 @@
     U.$('#pk', v).onchange = async e => {
       const files = [...e.target.files], pr = U.$('#pkp', v);
       for (const f of files) {
-        try { const info = await App.media.importZip(f, (i, n) => { pr.textContent = f.name + ': ' + Math.round(i / n * 100) + '%'; }); pr.textContent = '✓ ' + info.title + ' imported'; }
+        try { const info = await App.media.importZip(f, (i, n) => { pr.textContent = f.name + ': ' + Math.round(i / n * 100) + '%'; }); pr.textContent = '✓ ' + info.title + ' imported' + (info.id === 'vocab' ? ' — reopen the app to load it' : ''); }
         catch (err) { pr.textContent = '✗ ' + f.name + ': ' + err.message; break; }
       }
       e.target.value = ''; drawBooks();

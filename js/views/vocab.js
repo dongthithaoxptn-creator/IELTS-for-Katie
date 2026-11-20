@@ -2,9 +2,10 @@
 (function (App) {
   'use strict';
   const U = App.util, S = App.store, I = App.icon, D = App.dict;
-  const KIND = { f: 'Word families', p: 'Phrasal verbs', c: 'Collocations', s: 'My saved words' };
+  const KIND = { b: 'From my books', f: 'Word families', p: 'Phrasal verbs', c: 'Collocations', s: 'My saved words' };
   const POS = { v: 'verb', n: 'noun', 'n/v': 'noun / verb', adj: 'adjective', adv: 'adverb' };
-  const ui = { tab: 'f', q: '', lv: '', st: '' };
+  const ui = { tab: 'b', q: '', lv: '', st: '' };
+  const unitItems = (sid, n) => App.units.list.filter(u => u.refs && u.refs.some(r => r.set === sid && r.n === n));
 
   function status(id) {
     const v = S.vs(id);
@@ -22,14 +23,15 @@
     const kinds = ['f', 'p', 'c'];
     const prog = kinds.map(k => { const all = UN.of(k), l = all.filter(u => S.isLearned(u.id)).length; return '<div class="card stat" style="padding:16px"><small>' + KIND[k] + '</small><b>' + l + '<span style="font-size:1rem;color:var(--muted)"> / ' + all.length + '</span></b><div class="bar mt"><i style="width:' + U.pct(l, all.length) + '%"></i></div></div>'; }).join('');
     v.innerHTML = '<div class="wrap"><div class="page-head"><div><div class="eyebrow">Vocabulary builder</div><h1>Your word bank</h1><p>' + UN.wordsLearned() + ' of ' + UN.wordsTotal() + ' words learned · ' + UN.due().length + ' due for review</p></div>' +
-      '<div class="row"><a class="btn ghost" href="#/quiz">' + I('spark') + ' Test me</a><a class="btn" href="#/vocab/learn/' + (ui.tab === 's' ? 'f' : ui.tab) + '">' + I('plus') + ' Learn 5 new</a></div></div>' +
+      '<div class="row"><a class="btn ghost" href="#/quiz">' + I('spark') + ' Test me</a><a class="btn" href="#/vocab/learn/' + (ui.tab === 's' || ui.tab === 'b' ? 'f' : ui.tab) + '">' + I('plus') + ' Learn 5 new</a></div></div>' +
       '<div class="grid g3 mb">' + prog + '</div>' +
       '<div class="tabs" role="tablist">' + Object.keys(KIND).map(k => '<button data-tab="' + k + '" class="' + (ui.tab === k ? 'on' : '') + '">' + KIND[k] + '</button>').join('') + '</div>' +
-      (ui.tab !== 's' ? '<div class="row mb"><input class="input" id="vq" placeholder="Search English or Vietnamese…" value="' + U.esc(ui.q) + '" style="flex:2;min-width:180px"><select class="input" id="vlv" style="flex:1;min-width:110px"><option value="">All levels</option>' + ['B1', 'B2', 'C1', 'C2'].map(l => '<option' + (ui.lv === l ? ' selected' : '') + '>' + l + '</option>').join('') + '</select><select class="input" id="vst" style="flex:1;min-width:130px"><option value="">Any status</option><option value="new"' + (ui.st === 'new' ? ' selected' : '') + '>New</option><option value="learned"' + (ui.st === 'learned' ? ' selected' : '') + '>Learned</option><option value="due"' + (ui.st === 'due' ? ' selected' : '') + '>Due</option></select></div>' : '') +
+      (ui.tab !== 's' && ui.tab !== 'b' ? '<div class="row mb"><input class="input" id="vq" placeholder="Search English or Vietnamese…" value="' + U.esc(ui.q) + '" style="flex:2;min-width:180px"><select class="input" id="vlv" style="flex:1;min-width:110px"><option value="">All levels</option>' + ['B1', 'B2', 'C1', 'C2'].map(l => '<option' + (ui.lv === l ? ' selected' : '') + '>' + l + '</option>').join('') + '</select><select class="input" id="vst" style="flex:1;min-width:130px"><option value="">Any status</option><option value="new"' + (ui.st === 'new' ? ' selected' : '') + '>New</option><option value="learned"' + (ui.st === 'learned' ? ' selected' : '') + '>Learned</option><option value="due"' + (ui.st === 'due' ? ' selected' : '') + '>Due</option></select></div>' : '') +
       '<div id="vlist"></div></div>';
     const draw = () => {
       const box = U.$('#vlist', v);
       if (ui.tab === 's') { box.innerHTML = saved(); return; }
+      if (ui.tab === 'b') { box.innerHTML = booksHTML(); return; }
       const q = U.norm(ui.q);
       const items = UN.of(ui.tab).filter(u => {
         if (ui.lv && u.lv !== ui.lv) return false;
@@ -96,14 +98,15 @@
   }
 
   /* ---------- learning session ---------- */
-  function learn(v, kind) {
-    const pool = App.units.of(kind).filter(u => !S.isLearned(u.id));
-    if (!pool.length) { v.innerHTML = '<div class="wrap"><div class="card empty"><h2>All ' + KIND[kind].toLowerCase() + ' learned 🎉</h2><p>Add more in Settings → Grow your word bank, or review with the daily test.</p><a class="btn" href="#/quiz">Daily test</a></div></div>'; return; }
+  function learn(v, kind, unitPool, label, back) {
+    const pool = (unitPool || App.units.of(kind)).filter(u => !S.isLearned(u.id));
+    label = label || KIND[kind]; back = back || '#/vocab';
+    if (!pool.length) { v.innerHTML = '<div class="wrap"><div class="card empty"><h2>All ' + U.esc(label) + ' learned 🎉</h2><p>Review them with the daily test, or pick another unit.</p><div class="row" style="justify-content:center"><a class="btn ghost" href="' + back + '">Back</a><a class="btn" href="#/quiz">Daily test</a></div></div></div>'; return; }
     const batch = pool.slice(0, 5);
     let i = 0;
     const step = () => {
       const u = batch[i];
-      v.innerHTML = '<div class="wrap"><div class="row between mb"><a class="btn ghost sm" href="#/vocab">' + I('back') + ' Vocabulary</a><div class="row"><span class="chip">' + KIND[kind] + '</span><b>' + (i + 1) + ' / ' + batch.length + '</b></div></div>' +
+      v.innerHTML = '<div class="wrap"><div class="row between mb"><a class="btn ghost sm" href="' + back + '">' + I('back') + ' Back</a><div class="row"><span class="chip">' + U.esc(label) + '</span><b>' + (i + 1) + ' / ' + batch.length + '</b></div></div>' +
         '<div class="dots mb">' + batch.map((_, j) => '<i class="' + (j < i ? 'ok' : j === i ? 'cur' : '') + '"></i>').join('') + '</div>' +
         '<div class="card">' + App.vocabCard(u) + '</div>' +
         '<div class="row mt" style="justify-content:flex-end"><button class="btn ghost" id="skip">Skip</button><button class="btn lg" id="got">' + I('check') + ' Got it — next</button></div></div>';
@@ -123,7 +126,33 @@
     step();
   }
 
-  App.views.vocab = function (v, parts) {
+  /* ---------- your books ---------- */
+  function booksHTML() {
+    const sets = App.data.bookSets;
+    if (!sets.length) return '<div class="empty">Vocabulary from your books (English Collocations in Use, English Phrasal Verbs in Use…) isn’t on this device yet.<br>Import the <b>vocab.zip</b> pack in <a href="#/settings">Settings → Cambridge books on this device</a>.</div>';
+    return sets.map(s => {
+      const all = App.units.list.filter(u => u.refs && u.refs.some(r => r.set === s.id)), lrn = all.filter(u => S.isLearned(u.id)).length;
+      return '<div class="card mb"><div class="row between"><div><h2 style="margin:0">' + U.esc(s.title) + '</h2><small>' + s.units.length + ' units · ' + lrn + ' of ' + all.length + ' learned</small></div><span class="chip">' + (s.kind === 'c' ? 'Collocations' : 'Phrasal verbs') + '</span></div>' +
+        '<div class="grid g2 mt" style="gap:10px">' + s.units.map(un => { const it = unitItems(s.id, un.n), l = it.filter(u => S.isLearned(u.id)).length;
+          return '<a class="list-item" style="margin:0" href="#/vocab/unit/' + s.id + '/' + un.n + '"><div class="grow"><b>Unit ' + un.n + ' · ' + U.esc(un.t) + '</b><div class="bar" style="height:6px;margin-top:8px"><i style="width:' + U.pct(l, it.length) + '%"></i></div></div><small>' + l + '/' + it.length + '</small></a>'; }).join('') + '</div></div>';
+    }).join('');
+  }
+  function unitPage(v, sid, n) {
+    const set = App.data.bookSets.find(s => s.id === sid), un = set && set.units.find(x => x.n === n);
+    if (!un) { ui.tab = 'b'; list(v); return; }
+    const items = unitItems(sid, n), learned = items.filter(u => S.isLearned(u.id));
+    v.innerHTML = '<div class="wrap"><a class="btn ghost sm mb" href="#/vocab?tab=b">' + I('back') + ' From my books</a>' +
+      '<div class="page-head"><div><div class="eyebrow">' + U.esc(set.title) + ' · Unit ' + n + '</div><h1>' + U.esc(un.t) + '</h1><p>' + learned.length + ' of ' + items.length + ' learned</p></div>' +
+      '<div class="row"><button class="btn ghost" id="ut">' + I('spark') + ' Test this unit</button><a class="btn" href="#/vocab/learn/u/' + sid + '/' + n + '">' + I('plus') + ' Learn 5 new</a></div></div>' +
+      '<div class="bar mb"><i style="width:' + U.pct(learned.length, items.length) + '%"></i></div>' +
+      items.map(u => { const x = u.p || u.c, head = u.p ? x.p : x.c; return '<a class="list-item" href="#/vocab/item/' + encodeURIComponent(u.id) + '"><div class="grow"><h3>' + U.esc(head) + '</h3><div class="vi">' + U.esc(x.vi) + '</div><small>' + U.esc(x.ex) + '</small></div><div>' + status(u.id) + '</div></a>'; }).join('') + '</div>';
+    U.$('#ut', v).onclick = () => { const pool = (learned.length >= 5 ? learned : items).map(u => u.id); App.quiz.start(v, pool, { title: 'Unit ' + n + ' · ' + un.t, min: Math.min(15, Math.max(10, pool.length)) }); };
+  }
+
+  App.views.vocab = function (v, parts, params) {
+    if (params && params.tab && KIND[params.tab]) ui.tab = params.tab;
+    if (parts[0] === 'unit') return unitPage(v, parts[1], +parts[2]);
+    if (parts[0] === 'learn' && parts[1] === 'u') { const set = App.data.bookSets.find(s => s.id === parts[2]); const n = +parts[3]; return learn(v, set ? set.kind : 'c', unitItems(parts[2], n), 'Unit ' + n + (set ? ' · ' + set.short : ''), '#/vocab/unit/' + parts[2] + '/' + n); }
     if (parts[0] === 'item') return detail(v, parts[1]);
     if (parts[0] === 'learn') return learn(v, parts[1] || 'f');
     list(v);

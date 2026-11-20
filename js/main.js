@@ -63,7 +63,8 @@
   };
 
   window.addEventListener('hashchange', route);
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', async () => {
+    try { await App.media.loadVocab(); } catch (e) { /* no book vocabulary on this device */ }
     App.units.build();
     App.applyTheme();
     // Daily test on every app launch (once per session) when there are learned words

@@ -98,6 +98,15 @@
       await req((await store('packs', 'readwrite')).delete(id));
       delete availCache[id]; urlCache.clear();
     },
+    /* vocabulary from your books: the imported vocab pack, or vocab/sets.js beside the app on your Mac */
+    async loadVocab() {
+      let src = null;
+      const blob = M.supported ? await M.get('vocab/sets.js') : null;
+      if (blob) src = URL.createObjectURL(new Blob([blob], { type: 'text/javascript' }));
+      else if (!/github\.io$/i.test(location.hostname)) src = 'vocab/sets.js';
+      if (!src) return;
+      await new Promise(res => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = res; document.head.appendChild(s); });
+    },
     async usage() { try { return navigator.storage && navigator.storage.estimate ? await navigator.storage.estimate() : null; } catch (e) { return null; } }
   };
 })(window.App);

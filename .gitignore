@@ -4,3 +4,4 @@ books/
 .DS_Store
 __test*
 .claude/
+vocab/

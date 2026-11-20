@@ -1,5 +1,7 @@
 /* IELTS Studio — core: utilities, storage, spaced repetition, band maths, TTS */
 window.App = window.App || { views: {}, data: {} };
+App.data.bookSets = App.data.bookSets || [];
+App.addBookSet = set => { if (!App.data.bookSets.some(s => s.id === set.id)) App.data.bookSets.push(set); };
 (function (App) {
   'use strict';
 
@@ -120,6 +122,22 @@ window.App = window.App || { views: {}, data: {} };
         if (B[u.id]) return; L.push(u); B[u.id] = u;
         f.m.forEach(m => { const k = m[0].toLowerCase(); if (!W[k]) W[k] = { w: m[0], pos: m[1], ipa: m[2], vi: m[3], ex: m[4], unit: u.id }; });
       });
+      // sets organised by your books (loaded from vocab/sets.js or the imported vocab pack)
+      (App.data.bookSets || []).forEach(set => set.units.forEach(un => un.i.forEach(it => {
+        const ref = { set: set.id, n: un.n };
+        if (set.kind === 'c') {
+          const id = 'c:' + it[0];
+          if (B[id]) { (B[id].refs = B[id].refs || []).push(ref); return; }
+          const u = { id, kind: 'c', c: { c: it[0], vi: it[1], ex: it[2], ty: set.short + ' · Unit ' + un.n }, title: it[0], lv: set.lv || 'C1', topic: un.t, refs: [ref] };
+          L.push(u); B[id] = u;
+        } else {
+          let id = 'p:' + it[0];
+          if (B[id] && B[id].p.vi === it[1]) { (B[id].refs = B[id].refs || []).push(ref); return; }
+          if (B[id]) id += '|' + set.id + '-' + un.n; // same verb, different meaning in another unit
+          const u = { id, kind: 'p', p: { p: it[0], vi: it[1], d: it[2], ex: it[3] }, title: it[0], lv: set.lv || 'C1', topic: un.t, refs: [ref] };
+          L.push(u); B[id] = u;
+        }
+      })));
       (App.data.phrasal || []).concat(state.extra.phrasal || []).forEach(p => {
         const u = { id: 'p:' + p.p, kind: 'p', p, title: p.p, lv: p.lv || 'B2', topic: 'Phrasal verbs' };
         if (!B[u.id]) { L.push(u); B[u.id] = u; }
