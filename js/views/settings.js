@@ -84,15 +84,15 @@
       try { const t = await App.ai.translate('sustainable', 'Governments must invest in sustainable transport.'); r.textContent = '✓ Works — “sustainable” = ' + t; }
       catch (e) { r.textContent = '✗ ' + e.message; }
     };
-    U.$('#ex', v).onclick = () => { U.download('ielts-studio-backup-' + U.dayKey() + '.json', S.exportJSON()); };
+    U.$('#ex', v).onclick = async () => { const o = JSON.parse(S.exportJSON()); try { o.ink = await App.ink.exportAll(); } catch (e) { /* no handwriting */ } U.download('ielts-studio-backup-' + U.dayKey() + '.json', JSON.stringify(o)); };
     U.$('#im', v).onchange = e => {
       const f = e.target.files[0]; if (!f) return;
       f.text().then(async t => {
         if (!(await U.confirm('Replace the progress on this device with the backup “' + f.name + '”?', 'Import'))) return;
-        try { S.importJSON(t); App.units.build(); App.applyTheme(); U.toast('Backup imported'); App.go('#/home'); } catch (err) { U.toast(err.message); }
+        try { const o = JSON.parse(t); const ink = o.ink; delete o.ink; S.importJSON(JSON.stringify(o)); if (ink) await App.ink.importAll(ink); App.units.build(); App.applyTheme(); U.toast('Backup imported'); App.go('#/home'); } catch (err) { U.toast(err.message); }
       });
     };
-    U.$('#rs', v).onclick = async () => { if (await U.confirm('Delete ALL progress, essays and settings on this device? Export a backup first if unsure.', 'Delete everything')) { S.reset(); App.units.build(); App.applyTheme(); App.go('#/home'); } };
+    U.$('#rs', v).onclick = async () => { if (await U.confirm('Delete ALL progress, essays and settings on this device? Export a backup first if unsure.', 'Delete everything')) { S.reset(); try { await App.ink.clearAll(); } catch (e) { /* ignore */ } App.units.build(); App.applyTheme(); App.go('#/home'); } };
 
     const addItems = (kind, items) => {
       const ex = S.s.extra[kind]; let n = 0;

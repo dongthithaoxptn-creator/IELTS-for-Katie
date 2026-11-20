@@ -269,6 +269,42 @@ body:has(#notefab:not([hidden])) #view{padding-bottom:120px}
 #notesheet .notes-ta.big{flex:1;resize:none;border:1px solid var(--noteline);background:var(--notebg);border-radius:14px;padding:12px 14px;min-height:180px;font-size:1.02rem;color:var(--ink)}
 @media (max-width:899px){#notesheet{top:auto;left:12px;right:12px;width:auto;bottom:calc(76px + env(safe-area-inset-bottom));height:min(62vh,520px);transform:translateY(20px)}}
 
+/* ---------- handwriting pad ---------- */
+.ink-row{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-top:8px}
+.ink-thumbs{display:flex;gap:8px;flex-wrap:wrap}
+.ink-thumbs:empty{display:none}
+.ink-thumb{border:1px solid var(--line);background:#fff;border-radius:10px;padding:3px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;box-shadow:0 2px 8px rgba(40,100,160,.08)}
+.ink-thumb img{width:86px;height:auto;display:block;border-radius:7px}
+.ink-thumb small{font-size:.7rem;color:var(--muted)}
+.notes-show .ink-thumbs,.note-card .ink-thumbs{margin-top:8px}
+html.ink-open,html.ink-open body{overflow:hidden}
+html.ink-open #modal{z-index:100} html.ink-open #toast{z-index:101}
+#inkpad{position:fixed;inset:0;z-index:95;background:var(--bg);background-image:var(--page);display:flex;flex-direction:column}
+.ink-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:calc(10px + env(safe-area-inset-top)) 14px 10px;background:var(--card);border-bottom:1px solid var(--line);box-shadow:0 4px 16px rgba(40,100,160,.08)}
+.ink-title{display:flex;flex-direction:column;min-width:0;max-width:220px}
+.ink-title small{color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.08em}
+.ink-title b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ink-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;flex:1}
+.ink-group{display:flex;gap:4px;align-items:center;background:var(--softer);border:1px solid var(--line);border-radius:12px;padding:3px}
+.ink-group .sw{width:30px;height:30px;border-radius:50%;border:3px solid #fff;background:var(--c);cursor:pointer;box-shadow:0 0 0 1px var(--line)}
+.ink-group .sw.on{box-shadow:0 0 0 2px var(--btn)}
+.ink-group .sz{width:34px;height:34px;border:none;background:transparent;border-radius:9px;display:grid;place-items:center;cursor:pointer}
+.ink-group .sz i{display:block;border-radius:50%;background:var(--ink)}
+.ink-group .sz.on,.ink-group .tl.on{background:var(--chip);color:var(--chip-ink)}
+.ink-group .tl,.ink-pages .tl{min-width:36px;height:36px;border:none;background:transparent;border-radius:9px;cursor:pointer;font-size:1.25rem;line-height:1;display:grid;place-items:center;color:var(--ink)}
+.ink-group .tl:disabled,.ink-pages .tl:disabled{opacity:.35}
+.ink-group .tl svg,.ink-pages .tl svg{width:19px;height:19px}
+.ink-group select{border:none;background:transparent;font-weight:600;padding:6px 4px;min-height:34px}
+.hl-ic{display:block;width:18px;height:12px;border-radius:3px;background:linear-gradient(90deg,#FFE14D,#FFD21F);transform:rotate(-20deg)}
+.er-ic{display:block;width:18px;height:12px;border-radius:3px;border:2px solid currentColor;background:linear-gradient(90deg,transparent 55%,#F7B8C4 55%)}
+.ink-pages{display:flex;align-items:center;gap:4px;margin-left:auto}
+.ink-pages b{font-size:.88rem;white-space:nowrap}
+.ink-scroll{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:16px 12px 40px}
+.ink-page{position:relative;margin:0 auto;border-radius:6px;box-shadow:0 10px 30px rgba(40,100,160,.18);background:#fff}
+.ink-page canvas{position:absolute;inset:0;border-radius:6px}
+.ink-fg{cursor:crosshair}
+.ink-hint{text-align:center;color:var(--muted);font-size:.82rem;margin:12px 0 0}
+
 /* ---------- popover / modal / toast ---------- */
 #pop{position:fixed;z-index:60;width:min(380px,calc(100vw - 24px));max-height:min(460px,70vh);overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 18px 50px rgba(30,70,120,.22);padding:16px}
 #pop .hw{font-family:var(--serif);font-size:1.5rem;font-weight:700}

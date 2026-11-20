@@ -24,6 +24,7 @@
 
   function route() {
     App.cleanups.splice(0).forEach(fn => { try { fn(); } catch (e) { /* ignore */ } });
+    if (App.offInk) App.offInk();
     App.tts.stop(); App.dict.setGloss({}); App.notes.detach();
     const raw = (location.hash || '#/home').slice(2);
     const [path, query] = raw.split('?');

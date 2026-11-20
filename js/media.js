@@ -53,6 +53,9 @@
     supported: 'indexedDB' in window,
     async packs() { try { return await req((await store('packs', 'readonly')).getAll()); } catch (e) { return []; } },
     async get(path) { try { return await req((await store('files', 'readonly')).get(path)); } catch (e) { return undefined; } },
+    async put(path, val) { await req((await store('files', 'readwrite')).put(val, path)); },
+    async del(path) { await req((await store('files', 'readwrite')).delete(path)); },
+    async keys(prefix) { try { return (await req((await store('files', 'readonly')).getAllKeys())).filter(k => String(k).startsWith(prefix)); } catch (e) { return []; } },
     /* URL for a book file: from this device's storage, else the file next to the app */
     async url(path) {
       if (urlCache.has(path)) return urlCache.get(path);
