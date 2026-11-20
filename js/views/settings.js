@@ -37,6 +37,10 @@
     const set = (k, val) => { st[k] = val; S.save(); };
     U.$('#pji', v).onclick = () => App.copyText(App.ai.projectInstructions());
 
+    const vocabSummary = () => {
+      const n = App.data.bookSets.length, words = App.units.list.filter(u => u.refs).length;
+      return n + (n === 1 ? ' book' : ' books') + ' · ' + words.toLocaleString('en') + ' words';
+    };
     const drawBooks = async () => {
       const packs = await App.media.packs(), box = U.$('#bookst', v); if (!box) return;
       const rows = await Promise.all(App.data.books.map(async b => {
@@ -45,7 +49,7 @@
           (pk ? '<button class="btn sm ghost" data-rm="' + b.id + '">Remove</button>' : ok ? '<span class="chip ok">Ready</span>' : '<span class="chip warn">Import ' + b.id + '.zip</span>') + '</div>';
       }));
       const vp = packs.find(p => p.id === 'vocab'), vs = App.data.bookSets.length;
-      rows.push('<div class="list-item"><div class="grow"><b>Vocabulary from your books</b><br><small>' + (vp ? 'Imported ' + U.fmtDate(vp.ts) + ' · ' + vs + (vs === 1 ? ' book' : ' books') : vs ? 'Available from the app folder · ' + vs + (vs === 1 ? ' book' : ' books') : 'Not on this device') + '</small></div>' +
+      rows.push('<div class="list-item"><div class="grow"><b>Vocabulary from your books</b><br><small>' + (vp ? 'Imported ' + U.fmtDate(vp.ts) + (vp.version ? ' · version ' + vp.version : '') + ' · ' + vocabSummary() : vs ? 'Available from the app folder · ' + vocabSummary() : 'Not on this device') + (App.media.vocabError ? ' · <b style="color:var(--bad,#c0392b)">could not be read: ' + U.esc(App.media.vocabError) + '</b>' : '') + '</small></div>' +
         (vp ? '<button class="btn sm ghost" data-rm="vocab">Remove</button>' : vs ? '<span class="chip ok">Ready</span>' : '<span class="chip warn">Import vocab.zip</span>') + '</div>');
       const u = await App.media.usage();
       box.innerHTML = rows.join('') + (u ? '<p class="muted mt" style="margin-bottom:0"><small>Storage used by this app: ' + Math.round((u.usage || 0) / 1048576) + ' MB' + (u.quota ? ' of about ' + Math.round(u.quota / 1073741824) + ' GB available' : '') + '</small></p>' : '');
@@ -55,7 +59,13 @@
     U.$('#pk', v).onchange = async e => {
       const files = [...e.target.files], pr = U.$('#pkp', v);
       for (const f of files) {
-        try { const info = await App.media.importZip(f, (i, n) => { pr.textContent = f.name + ': ' + Math.round(i / n * 100) + '%'; }); pr.textContent = '✓ ' + info.title + ' imported' + (info.id === 'vocab' ? ' — reopen the app to load it' : ''); }
+        try {
+          const info = await App.media.importZip(f, (i, n) => { pr.textContent = f.name + ': ' + Math.round(i / n * 100) + '%'; });
+          if (info.id === 'vocab') {
+            const ok = await App.media.loadVocab(); App.units.build();
+            pr.textContent = ok ? '✓ ' + info.title + ' loaded: ' + vocabSummary() : '✗ ' + info.title + ' was saved but could not be read' + (App.media.vocabError ? ' (' + App.media.vocabError + ')' : '');
+          } else pr.textContent = '✓ ' + info.title + ' imported';
+        }
         catch (err) { pr.textContent = '✗ ' + f.name + ': ' + err.message; break; }
       }
       e.target.value = ''; drawBooks();

@@ -1,7 +1,7 @@
 /* IELTS Studio — core: utilities, storage, spaced repetition, band maths, TTS */
 window.App = window.App || { views: {}, data: {} };
 App.data.bookSets = App.data.bookSets || [];
-App.addBookSet = set => { if (!App.data.bookSets.some(s => s.id === set.id)) App.data.bookSets.push(set); };
+App.addBookSet = set => { const i = App.data.bookSets.findIndex(s => s.id === set.id); if (i >= 0) App.data.bookSets[i] = set; else App.data.bookSets.push(set); };
 (function (App) {
   'use strict';
 

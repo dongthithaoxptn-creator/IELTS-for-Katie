@@ -81,12 +81,14 @@
       let bytes = 0;
       for (let i = 0; i < files.length; i++) {
         const e = files[i], ext = e.name.split('.').pop().toLowerCase();
-        const blob = new Blob([file.slice(e.start, e.start + e.size)], { type: MIME[ext] || 'application/octet-stream' });
-        await req((await store('files', 'readwrite')).put(blob, e.name));
+        // copy the bytes (not a reference to the picked file): Safari on iPad can lose file-backed blobs later
+        const data = await file.slice(e.start, e.start + e.size).arrayBuffer();
+        const val = ext === 'js' ? new TextDecoder().decode(data) : new Blob([data], { type: MIME[ext] || 'application/octet-stream' });
+        await req((await store('files', 'readwrite')).put(val, e.name));
         bytes += e.size;
         if (onProgress) onProgress(i + 1, files.length);
       }
-      await req((await store('packs', 'readwrite')).put({ id: info.id, title: info.title, files: files.length, bytes, ts: Date.now() }));
+      await req((await store('packs', 'readwrite')).put({ id: info.id, title: info.title, version: info.version || null, files: files.length, bytes, ts: Date.now() }));
       delete availCache[info.id]; urlCache.clear();
       return info;
     },
@@ -94,18 +96,23 @@
       const s = await store('files', 'readwrite');
       const keys = await req(s.getAllKeys());
       const st = await store('files', 'readwrite');
-      await Promise.all(keys.filter(k => k.startsWith('audio/' + id + '/') || k.startsWith('books/' + id + '/')).map(k => req(st.delete(k))));
+      await Promise.all(keys.filter(k => k.startsWith('audio/' + id + '/') || k.startsWith('books/' + id + '/') || (id === 'vocab' && k.startsWith('vocab/'))).map(k => req(st.delete(k))));
       await req((await store('packs', 'readwrite')).delete(id));
+      if (id === 'vocab') { App.data.bookSets.length = 0; App.units.build(); }
       delete availCache[id]; urlCache.clear();
     },
     /* vocabulary from your books: the imported vocab pack, or vocab/sets.js beside the app on your Mac */
     async loadVocab() {
-      let src = null;
-      const blob = M.supported ? await M.get('vocab/sets.js') : null;
-      if (blob) src = URL.createObjectURL(new Blob([blob], { type: 'text/javascript' }));
-      else if (!/github\.io$/i.test(location.hostname)) src = 'vocab/sets.js';
-      if (!src) return;
-      await new Promise(res => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = res; document.head.appendChild(s); });
+      const stored = M.supported ? await M.get('vocab/sets.js') : null;
+      if (stored) {
+        try {
+          const code = typeof stored === 'string' ? stored : await new Response(stored).text();
+          new Function(code)(); // the pack calls App.addBookSet(...) for each book
+          M.vocabError = null; return true;
+        } catch (e) { M.vocabError = e.message || String(e); console.error('vocab pack', e); return false; }
+      }
+      if (/github\.io$/i.test(location.hostname)) return false;
+      return new Promise(res => { const s = document.createElement('script'); s.src = 'vocab/sets.js'; s.onload = () => res(true); s.onerror = () => res(false); document.head.appendChild(s); });
     },
     async usage() { try { return navigator.storage && navigator.storage.estimate ? await navigator.storage.estimate() : null; } catch (e) { return null; } }
   };
