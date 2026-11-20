@@ -23,7 +23,7 @@ html{--c:#2B78B8;--cs:#DAEEFC;--cs2:#E7E4FD;--c2:#8CC4F0}
   --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
   --sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   --page:radial-gradient(1000px 600px at 105% -10%,var(--acc-soft) 0,transparent 62%),radial-gradient(900px 560px at -12% 108%,var(--acc-soft2) 0,transparent 60%),radial-gradient(700px 420px at 45% 115%,#FDE9F3 0,transparent 60%),radial-gradient(600px 380px at -5% 10%,#E4F6F0 0,transparent 60%);
-  --hero:linear-gradient(135deg,var(--acc-soft) 0%,var(--acc-soft2) 62%,#FFFFFF 140%); --hero-ink:#1B2F4C; --hero-muted:#56678A; --hero-accent:var(--acc);
+  --hero:linear-gradient(135deg,color-mix(in srgb,var(--acc-soft) 78%,var(--acc2)) 0%,var(--acc-soft) 45%,var(--acc-soft2) 100%); --hero-ink:#1B2F4C; --hero-muted:#56678A; --hero-accent:var(--acc);
   --side-bg:linear-gradient(180deg,#E3F1FC 0%,#ECE8FD 45%,#FBE9F3 75%,#E3F5EF 100%); --side-ink:#2D3F63; --side-sec:#7A86AD;
   --side-hover:rgba(255,255,255,.7); --side-on:#FFFFFF; --side-on-ink:var(--acc); --side-card:rgba(255,255,255,.75);
   --tab-bg:rgba(255,255,255,.92); --tab-ink:#6B7799;
@@ -100,7 +100,7 @@ html[data-theme=dark] .nav-a.on{background:color-mix(in srgb,var(--c) 22%,transp
 /* ---------- components ---------- */
 .page-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:20px;background:var(--hero);border:1px solid rgba(255,255,255,.75);border-radius:24px;padding:20px 22px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
 .page-head::before{content:"";position:absolute;width:220px;height:220px;border-radius:50%;right:-60px;top:-90px;background:radial-gradient(circle,rgba(255,255,255,.75),rgba(255,255,255,0) 70%);pointer-events:none}
-.page-head::after{content:"";position:absolute;width:120px;height:120px;border-radius:50%;right:22%;bottom:-70px;background:var(--acc2);opacity:.22;pointer-events:none}
+.page-head::after{content:"";position:absolute;width:160px;height:160px;border-radius:50%;right:18%;bottom:-90px;background:var(--acc2);opacity:.35;pointer-events:none}
 .page-head>*{position:relative;z-index:1}
 .page-head h1{color:var(--hero-ink)}
 html[data-theme=dark] .page-head{border-color:rgba(255,255,255,.06)}
@@ -108,14 +108,14 @@ html[data-theme=dark] .page-head{border-color:rgba(255,255,255,.06)}
 .eyebrow{font-size:.75rem;text-transform:uppercase;letter-spacing:.12em;color:var(--link);font-weight:700;margin-bottom:4px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
 .card + .card{margin-top:16px}
-.tint{--btn:var(--c);--btn-hover:color-mix(in srgb,var(--c) 84%,#000);--chip:var(--cs);--chip-ink:var(--c);--link:var(--c);--grad-bar:linear-gradient(90deg,var(--c2),var(--c));background:linear-gradient(160deg,var(--cs) 0%,var(--card) 78%);border-color:color-mix(in srgb,var(--c) 16%,var(--line))}
+.tint{--btn:var(--c);--btn-hover:color-mix(in srgb,var(--c) 84%,#000);--chip:var(--cs);--chip-ink:var(--c);--link:var(--c);--grad-bar:linear-gradient(90deg,var(--c2),var(--c));background:linear-gradient(150deg,var(--cs) 0%,color-mix(in srgb,var(--cs) 55%,#fff) 100%);border-color:color-mix(in srgb,var(--c) 22%,#fff)}
 .tint .ic-bubble{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:var(--c);color:#fff;box-shadow:0 6px 16px color-mix(in srgb,var(--c) 35%,transparent)}
 .tint .ic-bubble svg{width:22px;height:22px}
 html[data-theme=dark] .tint{background:linear-gradient(160deg,color-mix(in srgb,var(--c) 22%,var(--card)) 0%,var(--card) 80%);--btn:color-mix(in srgb,var(--c) 85%,#fff);--chip:color-mix(in srgb,var(--c) 26%,transparent);--chip-ink:#fff;--link:color-mix(in srgb,var(--c) 55%,#fff)}
 .tabs button.on{box-shadow:0 4px 12px color-mix(in srgb,var(--btn) 30%,transparent)}
 .card.flat{box-shadow:none}
 .card-hero{background:var(--hero);color:var(--hero-ink);border:1px solid rgba(255,255,255,.75);position:relative;overflow:hidden}
-.card-hero::after{content:"";position:absolute;width:260px;height:260px;border-radius:50%;right:-80px;bottom:-120px;background:var(--acc2);opacity:.2;pointer-events:none}
+.card-hero::after{content:"";position:absolute;width:280px;height:280px;border-radius:50%;right:-80px;bottom:-130px;background:var(--acc2);opacity:.32;pointer-events:none}
 .card-hero>*{position:relative;z-index:1}
 .card-hero .muted,.card-hero small{color:var(--hero-muted)}
 .card-hero .eyebrow{color:var(--hero-accent)}
