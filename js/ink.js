@@ -161,7 +161,7 @@
     });
     fgC.addEventListener('pointermove', e => {
       if (!drawing || e.pointerId !== drawing.id) return; e.preventDefault();
-      const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+      const co = e.getCoalescedEvents && e.getCoalescedEvents(), evs = co && co.length ? co : [e];
       if (drawing.erase) { evs.forEach(ev => eraseAt(pt(ev))); return; }
       const s = drawing.s, before = s.p.length / 3;
       evs.forEach(ev => { const q = pt(ev), n = s.p.length; if (n && Math.abs(s.p[n - 3] - q[0]) + Math.abs(s.p[n - 2] - q[1]) < 0.8) return; s.p.push(...q); });
