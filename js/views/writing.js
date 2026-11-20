@@ -172,7 +172,7 @@
       } });
       U.$('#cpy2', v).onclick = () => copyText(App.ai.manualPrompt(h.task, h.prompt, h.data || '', h.essay));
     }
-    U.$('#del', v).onclick = async () => { if (await U.confirm('Delete this essay and its feedback?', 'Delete')) { S.s.writing.splice(idx, 1); S.save(); App.go('#/writing'); } };
+    U.$('#del', v).onclick = async () => { if (await U.confirm('Delete this essay and its feedback?', 'Delete')) { S.forget('w', String(S.s.writing[idx].ts)); S.s.writing.splice(idx, 1); S.save(); App.go('#/writing'); } };
   }
   function editor(v, id, params) {
     let w = App.data.writing1.find(x => x.id === id), task = 1;

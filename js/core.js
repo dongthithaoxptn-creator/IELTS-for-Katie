@@ -67,6 +67,7 @@ App.addBookSet = set => { const i = App.data.bookSets.findIndex(s => s.id === se
   const KEY = 'ielts-studio-v1';
   const defaults = () => ({
     v: 1, vocab: {}, saved: [], activity: {}, attempts: [], writing: [], speaking: [], dictCache: {}, notes: {},
+    gone: { notes: {}, saved: {}, vocab: {}, w: {} }, acts: {},
     extra: { families: [], phrasal: [], colloc: [] },
     settings: { apiKey: '', model: 'claude-opus-5-5', target: 7, examDate: '', theme: 'auto', voice: '', rate: 0.95, quizSize: 10 },
     meta: { startDay: U.dayKey(), created: Date.now() }
@@ -79,12 +80,19 @@ App.addBookSet = set => { const i = App.data.bookSets.findIndex(s => s.id === se
     for (const k in d) if (s[k] == null) s[k] = d[k];
     s.settings = Object.assign(d.settings, s.settings);
     s.extra = Object.assign(d.extra, s.extra);
+    s.gone = Object.assign(d.gone, s.gone);
     return s;
   }
   let state = load();
   const S = App.store = {
     get s() { return state; },
-    save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { U.toast('Could not save — storage full?'); } },
+    save(quiet) { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { U.toast('Could not save — storage full?'); } if (!quiet && App.sync) App.sync.soon(); },
+    /* study activity from this device plus your other devices (synced), added up per day */
+    allActivity() {
+      const out = {}, add = act => Object.keys(act || {}).forEach(k => { const o = out[k] || (out[k] = { sec: 0, learned: 0, reviewed: 0, correct: 0, tasks: 0 }), a = act[k]; for (const f in o) o[f] += a[f] || 0; });
+      add(state.activity); Object.values(state.acts || {}).forEach(add); return out;
+    },
+    forget(kind, id) { (state.gone[kind] || (state.gone[kind] = {}))[id] = Date.now(); },
     day(k = U.dayKey()) { return state.activity[k] || (state.activity[k] = { sec: 0, learned: 0, reviewed: 0, correct: 0, tasks: 0 }); },
     addSeconds(sec) { S.day().sec += sec; S.save(); },
     exportJSON() { return JSON.stringify(state, null, 1); },
@@ -97,15 +105,15 @@ App.addBookSet = set => { const i = App.data.bookSets.findIndex(s => s.id === se
     isLearned(id) { return (state.vocab[id] || {}).box >= 1; },
     learn(id) {
       const v = state.vocab[id] || (state.vocab[id] = { box: 0, ok: 0, bad: 0 });
-      if (!v.box) { v.box = 1; v.t = Date.now(); v.due = Date.now() + 864e5; S.day().learned++; }
+      if (!v.box) { v.box = 1; v.t = Date.now(); v.due = Date.now() + 864e5; v.u = Date.now(); S.day().learned++; }
       S.save();
     },
-    unlearn(id) { delete state.vocab[id]; S.save(); },
+    unlearn(id) { delete state.vocab[id]; S.forget('vocab', id); S.save(); },
     review(id, ok) {
       const v = state.vocab[id] || (state.vocab[id] = { box: 1, ok: 0, bad: 0, t: Date.now() });
       if (!v.box) { v.box = 1; v.t = Date.now(); }
       if (ok) { v.ok++; v.box = Math.min(6, v.box + 1); } else { v.bad++; v.box = 1; }
-      v.last = Date.now(); v.due = Date.now() + S.INTERVALS[v.box] * 864e5;
+      v.last = Date.now(); v.u = v.last; v.due = Date.now() + S.INTERVALS[v.box] * 864e5;
       const d = S.day(); d.reviewed++; if (ok) d.correct++;
       S.save();
     },
@@ -231,7 +239,8 @@ App.addBookSet = set => { const i = App.data.bookSets.findIndex(s => s.id === se
   /* ---------------- streak ---------------- */
   App.streak = function () {
     let n = 0; const d = new Date();
-    const active = k => { const a = state.activity[k]; return a && (a.sec >= 60 || a.reviewed || a.tasks || a.learned); };
+    const all = S.allActivity();
+    const active = k => { const a = all[k]; return a && (a.sec >= 60 || a.reviewed || a.tasks || a.learned); };
     if (!active(U.dayKey(d))) d.setDate(d.getDate() - 1);
     while (active(U.dayKey(d))) { n++; d.setDate(d.getDate() - 1); }
     return n;

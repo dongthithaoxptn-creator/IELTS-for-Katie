@@ -25,7 +25,7 @@
     return '<svg class="spark" viewBox="0 0 ' + W + ' ' + H + '" style="color:var(--muted)" role="img" aria-label="Band score trend">' + g + '</svg><div class="row" style="gap:16px">' + legend + '</div>';
   }
   function studyBars(days) {
-    const vals = days.map(d => (S.s.activity[d] || {}).sec || 0), max = Math.max(1800, Math.max.apply(null, vals));
+    const vals = days.map(d => (S.allActivity()[d] || {}).sec || 0), max = Math.max(1800, Math.max.apply(null, vals));
     const W = 640, H = 160, B = 22, bw = W / days.length;
     return '<svg class="spark" viewBox="0 0 ' + W + ' ' + H + '" style="color:var(--muted)" role="img" aria-label="Study time, last 14 days">' + days.map((d, i) => { const h = vals[i] / max * (H - B - 10); return '<rect x="' + (i * bw + 4) + '" y="' + (H - B - h) + '" width="' + (bw - 8) + '" height="' + Math.max(h, 1.5) + '" rx="4" fill="#2F6FD0" fill-opacity="' + (vals[i] ? 1 : .2) + '"><title>' + d + ': ' + U.fmtDur(vals[i]) + '</title></rect><text x="' + (i * bw + bw / 2) + '" y="' + (H - 6) + '" font-size="10.5" text-anchor="middle" fill="currentColor">' + d.slice(8) + '</text>'; }).join('') + '</svg>';
   }
@@ -35,7 +35,7 @@
     const today = U.dayKey();
     for (let k = 0; k < 7 * 17; k++) {
       const key = U.dayKey(d); if (key > today) break;
-      const a = S.s.activity[key] || {}, m = (a.sec || 0) / 60;
+      const a = S.allActivity()[key] || {}, m = (a.sec || 0) / 60;
       const lv = m === 0 && !a.reviewed && !a.tasks ? 0 : m < 10 ? 1 : m < 25 ? 2 : m < 50 ? 3 : 4;
       cells.push('<i class="' + (lv ? 'l' + lv : '') + '" title="' + key + ': ' + Math.round(m) + ' min"></i>');
       d.setDate(d.getDate() + 1);
@@ -45,11 +45,11 @@
 
   App.views.progress = function (v) {
     const s = S.s, est = App.bands.estimate(), target = +s.settings.target || 7, UN = App.units;
-    const totalSec = Object.values(s.activity).reduce((n, d) => n + (d.sec || 0), 0);
-    const daysActive = Object.values(s.activity).filter(d => d.sec >= 60 || d.reviewed || d.tasks).length;
+    const totalSec = Object.values(S.allActivity()).reduce((n, d) => n + (d.sec || 0), 0);
+    const daysActive = Object.values(S.allActivity()).filter(d => d.sec >= 60 || d.reviewed || d.tasks).length;
     const since = U.daysBetween(s.meta.startDay, U.dayKey()) + 1;
     const days = []; for (let k = 13; k >= 0; k--) { const d = new Date(); d.setDate(d.getDate() - k); days.push(U.dayKey(d)); }
-    const week = days.slice(7).reduce((n, d) => n + ((s.activity[d] || {}).sec || 0), 0);
+    const week = days.slice(7).reduce((n, d) => n + ((S.allActivity()[d] || {}).sec || 0), 0);
     const pts = SK.map(([k]) => App.bands.history(k).map(a => ({ ts: a.ts, band: a.band })));
     const boxes = [0, 0, 0, 0, 0, 0]; UN.learned().forEach(u => { boxes[Math.min(6, S.vs(u.id).box) - 1]++; });
     const bmax = Math.max(1, Math.max.apply(null, boxes));

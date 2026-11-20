@@ -61,7 +61,7 @@
     draw();
     if (!v._del) { v._del = true; v.addEventListener('click', e => {
       const del = e.target.closest('[data-del]'); if (!del) return;
-      S.s.saved.splice(+del.dataset.del, 1); S.save(); U.$('#vlist', v).innerHTML = saved();
+      const gone = S.s.saved.splice(+del.dataset.del, 1)[0]; if (gone) S.forget('saved', gone.w.toLowerCase()); S.save(); U.$('#vlist', v).innerHTML = saved();
     }); }
     bindSay(v);
   }

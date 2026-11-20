@@ -29,12 +29,13 @@
       '<div class="card tint" data-c="aqua"><h2>Cambridge books on this device</h2><p class="muted">The listening recordings and book pages are kept on each device, never online. Import each book’s pack (<b>cam16.zip</b> … <b>cam20.zip</b>) once per device. On iPad, do this inside the app you added to your Home Screen, because Safari tabs and the Home Screen app keep separate storage.</p>' +
       '<div id="bookst"></div><div class="row mt"><label class="btn" style="cursor:pointer">' + I('plus') + ' Import book packs (.zip)<input type="file" id="pk" accept=".zip,application/zip" multiple hidden></label><span id="pkp" class="muted"></span></div></div>' +
 
+      '<div class="card tint" data-c="lav" id="synccard"><h2>Sync between your devices</h2><p class="muted">Keep one progress on your iPad, laptop and phone. Your learned words, test scores, study time, notes and handwriting are saved in your <b>private</b> GitHub storage and merged automatically when you open the app, while you study and when you leave it. Book packs and your API key stay on each device.</p><div id="syncbox"></div></div>' +
       '<div class="card tint" data-c="sky"><h2>Your data & using several devices</h2><p class="muted">Progress is saved on each device separately. To continue on your iPad what you started on your MacBook, export a backup here and import it there (AirDrop or save it to your Drive folder).</p>' +
       '<div class="row"><button class="btn" id="ex">Export backup</button><label class="btn ghost" style="cursor:pointer">Import backup<input type="file" id="im" accept=".json,application/json" hidden></label><button class="btn ghost" id="rs" style="color:var(--bad)">Reset everything</button></div></div>' +
 
       '<div class="card tint" data-c="peach"><h2>Install as an app</h2><ul><li><b>iPad / iPhone (Safari):</b> Share → <i>Add to Home Screen</i>.</li><li><b>Mac (Safari):</b> File → <i>Add to Dock</i>. <b>Chrome:</b> the install icon in the address bar.</li></ul><p class="muted" style="margin:0">After adding it to your Home Screen, open it from there and import your book packs above. Progress and books are stored separately in each browser and on each device.</p></div></div>';
 
-    const set = (k, val) => { st[k] = val; S.save(); };
+    const set = (k, val) => { st[k] = val; st._u = Date.now(); S.save(); };
     U.$('#pji', v).onclick = () => App.copyText(App.ai.projectInstructions());
 
     const vocabSummary = () => {
@@ -56,6 +57,32 @@
       U.$$('[data-rm]', box).forEach(bt => bt.onclick = async () => { if (await U.confirm('Remove ' + bt.dataset.rm + ' from this device? You can import it again later.', 'Remove')) { await App.media.remove(bt.dataset.rm); drawBooks(); } });
     };
     drawBooks();
+    /* ---- sync between devices ---- */
+    const ago = ts => { if (!ts) return 'not yet'; const s = (Date.now() - ts) / 1000; return s < 60 ? 'just now' : s < 3600 ? Math.floor(s / 60) + ' min ago' : s < 86400 ? Math.floor(s / 3600) + ' h ago' : U.fmtDate(ts); };
+    const drawSync = () => {
+      const box = U.$('#syncbox', v); if (!box) return;
+      const st = App.sync.state;
+      if (App.sync.connected()) {
+        box.innerHTML = '<div class="list-item" style="cursor:default"><div class="grow"><b>' + (st.status === 'syncing' ? 'Syncing…' : st.status === 'error' ? '⚠️ Not synced' : '✓ Connected') + '</b><br><small>' + U.esc(App.sync.repo()) + ' · last synced ' + ago(st.last) + '</small>' + (st.status === 'error' ? '<div class="note mt" style="font-size:.88rem">' + U.esc(st.error) + '</div>' : '') + '</div>' +
+          '<div class="row"><button class="btn sm" id="syn"' + (st.status === 'syncing' ? ' disabled' : '') + '>Sync now</button><button class="btn sm ghost" id="sydc">Disconnect</button></div></div>';
+        U.$('#syn', box).onclick = () => App.sync.run('settings');
+        U.$('#sydc', box).onclick = async () => { if (await U.confirm('Stop syncing on this device? Your progress stays here; you can connect again with a new key.', 'Disconnect')) { App.sync.disconnect(); drawSync(); } };
+      } else {
+        box.innerHTML = '<ol class="muted" style="padding-left:20px"><li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub → new fine-grained key</a> (sign in if asked).</li>' +
+          '<li><b>Token name:</b> Katie’s IELTS sync. <b>Expiration:</b> the longest it offers.</li><li><b>Repository access:</b> Only select repositories → <b>katie-ielts-data</b>.</li>' +
+          '<li><b>Permissions → Repository permissions → Contents:</b> Read and write.</li><li>Tap <b>Generate token</b>, copy it and paste it here. Do this once on each device (same key is fine).</li></ol>' +
+          '<div class="grid g2"><div class="field"><label class="f" for="sytk">GitHub key</label><input class="input" id="sytk" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="github_pat_…"></div>' +
+          '<div class="field"><label class="f" for="syrp">Private storage</label><input class="input" id="syrp" autocapitalize="off" spellcheck="false" value="' + U.esc(App.sync.repo()) + '"></div></div>' +
+          '<div class="row mt"><button class="btn" id="syc">Connect and sync</button><span id="sym" class="muted"></span></div>';
+        U.$('#syc', box).onclick = async () => {
+          const tk = U.$('#sytk', box).value.trim(), m = U.$('#sym', box); if (!tk) { m.textContent = 'Paste your GitHub key first.'; return; }
+          m.textContent = 'Connecting…';
+          try { const r = await App.sync.connect(tk, U.$('#syrp', box).value); if (r.status === 'error') throw new Error(r.error); U.toast('Synced ✓ Your devices now share one progress'); drawSync(); }
+          catch (err) { m.textContent = '✗ ' + err.message; }
+        };
+      }
+    };
+    drawSync(); App.onLeave(App.sync.on(drawSync));
     U.$('#pk', v).onchange = async e => {
       const files = [...e.target.files], pr = U.$('#pkp', v);
       for (const f of files) {

@@ -69,6 +69,7 @@
   document.addEventListener('DOMContentLoaded', async () => {
     try { await App.media.loadVocab(); } catch (e) { /* no book vocabulary on this device */ }
     App.units.build();
+    if (App.sync) App.sync.run('open');
     App.applyTheme();
     // Daily test on every app launch (once per session) when there are learned words
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});

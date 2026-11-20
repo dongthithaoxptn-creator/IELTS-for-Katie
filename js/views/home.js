@@ -6,8 +6,8 @@
     const s = S.s, est = App.bands.estimate(), UN = App.units;
     const learned = UN.learned().length, total = UN.list.length, due = UN.due().length;
     const wl = UN.wordsLearned(), wt = UN.wordsTotal();
-    const today = S.day(), streak = App.streak();
-    const totalSec = Object.values(s.activity).reduce((n, d) => n + (d.sec || 0), 0);
+    const allAct = S.allActivity(), today = allAct[U.dayKey()] || S.day(), streak = App.streak();
+    const totalSec = Object.values(allAct).reduce((n, d) => n + (d.sec || 0), 0);
     const h = new Date().getHours();
     const greet = (h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening') + (s.settings.name ? ', ' + U.esc(s.settings.name) : '');
     const target = +s.settings.target || 7;

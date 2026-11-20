@@ -17,19 +17,19 @@
     metaOf(key) { const n = all()[key] || {}; return meta[key] || { kind: n.kind, title: n.title, href: n.href }; },
     set(key, text, m) {
       const A = all(); m = m || meta[key] || {}; const old = A[key] || {};
-      if (!String(text).trim() && !old.ink) delete A[key];
+      if (!String(text).trim() && !old.ink) { if (A[key]) S.forget('notes', key); delete A[key]; }
       else A[key] = { t: String(text), ink: old.ink || 0, kind: m.kind || old.kind || 'vocab', title: m.title || old.title || '', href: m.href || old.href || '', ts: Date.now(), created: old.created || Date.now() };
       S.save(); N.refresh(key);
     },
     /* handwritten pages: how many this note has (the pages themselves live in App.ink) */
     setInk(key, count, m0) {
       const A = all(), old = A[key], m = m0 && m0.title ? m0 : meta[key] || old || {};
-      if (!count && !(old && String(old.t || '').trim())) delete A[key];
+      if (!count && !(old && String(old.t || '').trim())) { if (old) S.forget('notes', key); delete A[key]; }
       else A[key] = { t: old ? old.t || '' : '', ink: count, kind: m.kind || 'vocab', title: m.title || '', href: m.href || '', ts: Date.now(), created: old && old.created || Date.now() };
       S.save(); N.refresh(key);
     },
     append(key, line) { const cur = N.get(key).replace(/\s+$/, ''); N.set(key, (cur ? cur + '\n' : '') + line); },
-    remove(key) { delete all()[key]; S.save(); if (App.ink) App.media.del('ink/' + key).catch(() => {}); N.refresh(key); },
+    remove(key) { delete all()[key]; S.forget('notes', key); S.save(); if (App.ink) App.media.del('ink/' + key).catch(() => {}); N.refresh(key); },
     list() { return Object.entries(all()).map(([key, n]) => Object.assign({ key }, n)).sort((a, b) => b.ts - a.ts); },
     count() { return Object.keys(all()).length; },
 
