@@ -11,6 +11,7 @@
       (!SR ? '<div class="note mb">Speech-to-text isn’t available in this browser. Use Safari or Chrome to answer by voice, or type your answers instead.</div>' : '') +
       '<h2>Part 1 · Introduction & interview</h2><div class="grid gauto">' + B.part1.map((t, i) => '<a class="card fam-card" href="#/speaking/p1/' + i + '"><b>' + U.esc(t.topic) + '</b><br><small>' + t.qs.length + ' questions</small></a>').join('') + '</div>' +
       '<h2 class="mt2">Part 2 · Long turn + Part 3 · Discussion</h2>' + B.part2.map(c => '<a class="list-item" href="#/speaking/p2/' + c.id + '"><span class="icon-btn" style="width:46px;height:46px">' + I('speak') + '</span><div class="grow"><h3>' + U.esc(c.title) + '</h3><small>Part 3: ' + U.esc(c.p3) + '</small></div><span class="chip outline">1 + 2 min</span></a>').join('') +
+      '<h2 class="mt2">Cambridge IELTS · full speaking tests</h2>' + App.cam.speakingListHTML() +
       (S.s.speaking.length ? '<h2 class="mt2">History</h2>' + S.s.speaking.map((h, i) => [h, i]).reverse().slice(0, 10).map(([h, i]) => '<a class="list-item" href="#/speaking/h/' + i + '"><div class="grow"><h3 style="font-size:1rem">' + U.esc(h.title) + '</h3><small>' + U.fmtDate(h.ts) + '</small></div><span class="band-pill ' + (h.result ? '' : 'none') + '">' + (h.result ? U.bandStr(h.result.overall) : '–') + '</span></a>').join('') : '') + '</div>';
   }
 
@@ -21,12 +22,20 @@
     let title;
     if (mode === 'p1') { const t = B.part1[+id] || B.part1[0]; p1(t); title = 'Part 1 · ' + t.topic; }
     else if (mode === 'p2') { const c = B.part2.find(x => x.id === id) || B.part2[0]; p2(c); title = 'Part 2 & 3 · ' + c.title; }
+    else if (mode === 'cam') {
+      const ct = App.cam.speakingTest(id); if (!ct) return { steps: [], title: 'Cambridge speaking test' };
+      const t = ct.t; title = ct.title;
+      t.p1.qs.forEach(q => steps.push({ part: 1, q, target: 25, label: 'Part 1 · ' + t.p1.topic }));
+      steps.push({ part: 2, card: { cue: t.p2.cue, points: t.p2.points.concat(t.p2.explain ? [t.p2.explain] : []) }, q: t.p2.cue, target: 120, prep: 60, label: 'Part 2 · Cue card' });
+      t.p3.forEach(g => g.qs.forEach(q => steps.push({ part: 3, q, target: 45, label: 'Part 3 · ' + g.t })));
+    }
     else { const t = U.rand(B.part1), c = U.rand(B.part2); p1(t); p2(c); title = 'Full mock · ' + t.topic + ' / ' + c.title; }
     return { steps, title };
   }
 
   function session(v, mode, id) {
     const { steps, title } = buildSteps(mode, id);
+    if (!steps.length) { v.innerHTML = '<div class="wrap"><a class="btn ghost sm mb" href="#/speaking">' + I('back') + ' Speaking</a>' + App.cam.missingNote('Speaking tests') + '</div>'; return; }
     const answers = steps.map(() => ({ a: '', secs: 0 }));
     App.notes.attach('sp:' + mode + (mode === 'mock' ? '' : ':' + id), { kind: 'speaking', title: 'Speaking · ' + (mode === 'mock' ? 'Full mock tests' : title), href: '#/speaking/' + mode + (mode === 'mock' ? '' : '/' + id) });
     let i = -1, rec = null, recording = false, recStart = 0, base = '', finalTxt = '', tick = null;

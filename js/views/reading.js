@@ -6,8 +6,9 @@
   App.bestAttempt = best;
 
   function list(v) {
-    v.innerHTML = '<div class="wrap"><div class="page-head"><div><div class="eyebrow">IELTS Builder · Reading</div><h1>Academic Reading</h1><p>About 20 minutes per passage. Tap any word to see its meaning. Your band is estimated from the official 40-question conversion table.</p></div></div>' +
+    v.innerHTML = '<div class="wrap"><div class="page-head"><div><div class="eyebrow">IELTS Builder · Reading</div><h1>Academic Reading</h1><p>Practice passages (about 20 minutes each) and full 60-minute Cambridge tests. Tap any word to see its meaning. Your band is estimated from the official 40-question conversion table.</p></div></div>' +
       App.data.reading.map(r => { const b = best('reading', r.id); const n = Q.flat(r.groups).length; return '<a class="list-item" href="#/reading/' + r.id + '"><span class="icon-btn" style="width:46px;height:46px">' + I('read') + '</span><div class="grow"><h3>' + U.esc(r.title) + '</h3><small>' + U.esc(r.topic) + ' · ' + n + ' questions · ' + r.groups.map(g => ({ tfng: 'T/F/NG', gap: 'completion', mcq: 'multiple choice', match: 'matching' })[g.type]).join(', ') + '</small></div>' + (b ? '<div style="text-align:right"><span class="band-pill">' + U.bandStr(b.band) + '</span><br><small>best ' + b.raw + '/' + b.total + '</small></div>' : '<span class="chip outline">Not tried</span>') + '</a>'; }).join('') +
+      '<h2 class="mt2">Cambridge IELTS · full Reading tests</h2>' + App.cam.readingListHTML() +
       '</div>';
   }
   function test(v, id) {
@@ -37,5 +38,5 @@
       App.refreshNav();
     };
   }
-  App.views.reading = (v, parts) => parts[0] ? test(v, parts[0]) : list(v);
+  App.views.reading = (v, parts) => parts[0] === 'cam' ? App.cam.readingTest(v, parts[1], +parts[2]) : parts[0] ? test(v, parts[0]) : list(v);
 })(window.App);

@@ -143,10 +143,10 @@
   /* ---------- screens ---------- */
   function list(v) {
     const hist = S.s.writing;
-    const rows = tab === 1 ? App.data.writing1.map(w => item(w.id, w.title, w.kind, 1)) : tab === 2 ? App.data.writing2.map(w => item(w.id, w.prompt.split('\n')[0].slice(0, 110) + (w.prompt.length > 110 ? '…' : ''), w.kind + ' · ' + w.topic, 2)) : null;
+    const rows = tab === 4 ? [App.cam.writingListHTML(hist)] : tab === 1 ? App.data.writing1.map(w => item(w.id, w.title, w.kind, 1)) : tab === 2 ? App.data.writing2.map(w => item(w.id, w.prompt.split('\n')[0].slice(0, 110) + (w.prompt.length > 110 ? '…' : ''), w.kind + ' · ' + w.topic, 2)) : null;
     v.innerHTML = '<div class="wrap"><div class="page-head"><div><div class="eyebrow">IELTS Builder · Writing</div><h1>Writing</h1><p>Write under timed conditions, then get strict, criterion-by-criterion marking based on the official IELTS band descriptors.</p></div><a class="btn ghost" href="#/writing/custom?task=' + (tab === 1 ? 1 : 2) + '">' + I('plus') + ' Use my own question</a></div>' +
       (!App.ai.enabled() ? '<div class="note mb">AI marking needs a Claude API key — add it in <a href="#/settings">Settings</a>. Without it you still get word count, structure checks and a copyable marking prompt.</div>' : '') +
-      '<div class="tabs"><button data-t="1" class="' + (tab === 1 ? 'on' : '') + '">Task 1</button><button data-t="2" class="' + (tab === 2 ? 'on' : '') + '">Task 2</button><button data-t="3" class="' + (tab === 3 ? 'on' : '') + '">My essays (' + hist.length + ')</button></div>' +
+      '<div class="tabs"><button data-t="1" class="' + (tab === 1 ? 'on' : '') + '">Task 1</button><button data-t="2" class="' + (tab === 2 ? 'on' : '') + '">Task 2</button><button data-t="4" class="' + (tab === 4 ? 'on' : '') + '">Cambridge books</button><button data-t="3" class="' + (tab === 3 ? 'on' : '') + '">My essays (' + hist.length + ')</button></div>' +
       (rows ? rows.join('') : history()) + '</div>';
     v.querySelector('.tabs').onclick = e => { const b = e.target.closest('[data-t]'); if (b) { tab = +b.dataset.t; list(v); } };
     function item(id, title, sub, t) {
@@ -177,6 +177,7 @@
   function editor(v, id, params) {
     let w = App.data.writing1.find(x => x.id === id), task = 1;
     if (!w) { w = App.data.writing2.find(x => x.id === id); task = 2; }
+    if (!w) { w = App.cam.writingTask(id); if (w) task = w.task; }
     const custom = id === 'custom';
     if (custom) { task = +(params.task || 2); w = { id: 'custom', title: 'My own question', prompt: '' }; }
     if (!w) { list(v); return; }
@@ -186,13 +187,14 @@
     v.innerHTML = '<div class="wrap" style="max-width:1300px"><div class="row between mb"><a class="btn ghost sm" href="#/writing">' + I('back') + ' Writing</a><div class="row"><span class="timer" id="tm"></span><span class="chip">Task ' + task + '</span></div></div>' +
       '<div class="split"><div class="pane"><div class="card"><div class="eyebrow">Writing Task ' + task + (w.kind ? ' · ' + U.esc(w.kind) : '') + '</div>' +
       (custom ? '<label class="f" for="cp">Paste the question</label><textarea class="input" id="cp" rows="6" placeholder="Paste a Task ' + task + ' question, e.g. from your Cambridge IELTS books">' + '</textarea>' + (task === 1 ? '<label class="f mt" for="img">Chart / diagram image (optional — the marker will look at it)</label><input type="file" id="img" accept="image/*" class="input"><div id="imgp" class="mt"></div><label class="f mt" for="cd">…or type the key data (optional)</label><textarea class="input" id="cd" rows="3"></textarea>' : '')
-        : '<p style="white-space:pre-wrap;font-family:var(--serif);font-size:1.05rem">' + D.wrap(w.prompt) + '</p>' + (w.chart ? '<div class="chart-box">' + chartSVG(w.chart) + '</div><p class="muted" style="margin:8px 0 0"><small>Figures are invented for practice.</small></p>' : '')) +
+        : '<p style="white-space:pre-wrap;font-family:var(--serif);font-size:1.05rem">' + D.wrap(w.prompt) + '</p>' + (w.chart ? '<div class="chart-box">' + chartSVG(w.chart) + '</div><p class="muted" style="margin:8px 0 0"><small>Figures are invented for practice.</small></p>' : '') + (w.pages && w.pages.length ? w.pages.map((p, i) => App.cam.img(p, 'Task ' + task + ' page ' + (i + 1))).join('') : '')) +
       '<p class="muted mt" style="margin-bottom:0">Write at least <b>' + (task === 1 ? 150 : 250) + ' words</b>. Suggested time: ' + (task === 1 ? 20 : 40) + ' minutes.</p></div></div>' +
       '<div class="pane"><textarea class="editor" id="ed" spellcheck="false" autocorrect="off" autocapitalize="sentences" placeholder="Start writing here… Leave a blank line between paragraphs.">' + U.esc(draft) + '</textarea>' +
       '<div class="row between mt"><span><b class="wc" id="wc">0</b> words</span><div class="row"><button class="btn ghost" id="cpy">Copy marking prompt</button><button class="btn" id="mark">' + I('spark') + ' Submit for marking</button></div></div>' +
       '<p class="muted" style="font-size:.85rem">Spell-check is off, as in the real exam. Drafts save automatically on this device.</p></div></div>' +
       '<div id="stats" class="card mt" hidden></div><div id="fb"></div></div>';
     const ed = U.$('#ed', v), wc = U.$('#wc', v);
+    if (w.cam) { App.cam.fill(v); if (task === 1 && w.pages.length) App.media.get(w.pages[0]).then(bl => { if (!bl) return; const rd = new FileReader(); rd.onload = () => { image = { type: 'image/jpeg', data: String(rd.result).split(',')[1] }; }; rd.readAsDataURL(bl); }); }
     App.notes.attach('w:' + id + (custom ? task : ''), { kind: 'writing', title: 'Writing Task ' + task + ' · ' + w.title, href: '#/writing/' + id + (custom ? '?task=' + task : '') });
     const t = App.Q.timer(U.$('#tm', v), (task === 1 ? 20 : 40) * 60); App.onLeave(t.stop);
     const upd = () => { const a = analyse(ed.value, task); wc.textContent = a.wc; wc.style.color = a.wc >= a.min ? 'var(--ok)' : ''; try { localStorage.setItem(key, ed.value); } catch (e) { /* ignore */ } return a; };
@@ -205,7 +207,7 @@
       rd.readAsDataURL(f);
     };
     const promptText = () => custom ? U.$('#cp', v).value.trim() : w.prompt;
-    const dText = () => custom ? ((U.$('#cd', v) || {}).value || '').trim() : dataText(w.chart);
+    const dText = () => custom ? ((U.$('#cd', v) || {}).value || '').trim() : w.cam && task === 1 ? 'The chart/diagram is the attached page from ' + w.kind + ' (if no image is attached, ask me to describe it).' : dataText(w.chart);
     let saved = null; // record created for this attempt (by copying or submitting)
     const makeRec = a => ({ ts: Date.now(), task, ref: w.id, title: custom ? promptText().slice(0, 70) : w.title || w.prompt.slice(0, 70), prompt: promptText(), data: dText(), essay: ed.value, words: a.wc, secs: Math.round(t.elapsed()) });
     const offerBandEntry = () => {

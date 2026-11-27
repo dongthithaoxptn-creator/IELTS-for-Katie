@@ -49,6 +49,10 @@
         return '<div class="list-item"><div class="grow"><b>' + U.esc(b.title) + '</b><br><small>' + (pk ? 'Imported ' + U.fmtDate(pk.ts) + ' · ' + Math.round(pk.bytes / 1048576) + ' MB' : ok ? 'Available from the app folder' : 'Not on this device') + '</small></div>' +
           (pk ? '<button class="btn sm ghost" data-rm="' + b.id + '">Remove</button>' : ok ? '<span class="chip ok">Ready</span>' : '<span class="chip warn">Import ' + b.id + '.zip</span>') + '</div>';
       }));
+      ['cam16', 'cam17', 'cam18', 'cam19', 'cam20'].forEach(id => {
+        const pk = packs.find(p => p.id === id + 'x'), b = App.cam.books[id];
+        rows.push('<div class="list-item"><div class="grow"><b>Cambridge IELTS ' + id.slice(3) + ' · Reading, Writing & Speaking</b><br><small>' + (pk ? 'Imported ' + U.fmtDate(pk.ts) + ' · ' + Math.round(pk.bytes / 1048576) + ' MB' + (b ? ' · 4 reading, 8 writing, 4 speaking tests' : '') : 'Not on this device') + '</small></div>' + (pk ? '<button class="btn sm ghost" data-rm="' + id + 'x">Remove</button>' : '<span class="chip warn">Import ' + id + 'x.zip</span>') + '</div>');
+      });
       const vp = packs.find(p => p.id === 'vocab'), vs = App.data.bookSets.length;
       rows.push('<div class="list-item"><div class="grow"><b>Vocabulary from your books</b><br><small>' + (vp ? 'Imported ' + U.fmtDate(vp.ts) + (vp.version ? ' · version ' + vp.version : '') + ' · ' + vocabSummary() : vs ? 'Available from the app folder · ' + vocabSummary() : 'Not on this device') + (App.media.vocabError ? ' · <b style="color:var(--bad,#c0392b)">could not be read: ' + U.esc(App.media.vocabError) + '</b>' : '') + '</small></div>' +
         (vp ? '<button class="btn sm ghost" data-rm="vocab">Remove</button>' : vs ? '<span class="chip ok">Ready</span>' : '<span class="chip warn">Import vocab.zip</span>') + '</div>');
@@ -88,7 +92,8 @@
       for (const f of files) {
         try {
           const info = await App.media.importZip(f, (i, n) => { pr.textContent = f.name + ': ' + Math.round(i / n * 100) + '%'; });
-          if (info.id === 'vocab') {
+          if (/^cam\d+x$/.test(info.id)) { await App.cam.load(); pr.textContent = '✓ ' + info.title + ' ready: 4 Reading, 8 Writing and 4 Speaking tests'; }
+          else if (info.id === 'vocab') {
             const ok = await App.media.loadVocab(); App.units.build();
             pr.textContent = ok ? '✓ ' + info.title + ' loaded: ' + vocabSummary() : '✗ ' + info.title + ' was saved but could not be read' + (App.media.vocabError ? ' (' + App.media.vocabError + ')' : '');
           } else pr.textContent = '✓ ' + info.title + ' imported';

@@ -58,16 +58,17 @@
     const card = (k, title, icon, desc, extra) => '<a class="card fam-card tint" data-c="' + SEC[k] + '" href="#/' + k + '"><div class="row between"><span class="ic-bubble">' + I(icon) + '</span><span class="band-pill ' + (est[k] == null ? 'none' : '') + '">' + U.bandStr(est[k]) + '</span></div><h2 class="mt" style="margin-bottom:4px">' + title + '</h2><p class="muted" style="margin:0">' + desc + '</p><small>' + (est.counts[k] || 0) + ' attempts' + (extra || '') + '</small></a>';
     v.innerHTML = '<div class="wrap"><div class="page-head"><div><div class="eyebrow">IELTS Builder</div><h1>Four skills, real exam tasks</h1><p>Tap any word in a passage, question or transcript to see its meaning.</p></div></div>' +
       '<div class="grid g2">' +
-      card('reading', 'Reading', 'read', 'Academic passages with True/False/Not Given, matching headings, sentence completion and multiple choice.', ' · ' + App.data.reading.length + ' passages') +
+      card('reading', 'Reading', 'read', 'Academic passages with True/False/Not Given, matching headings, sentence completion and multiple choice.', ' · ' + App.data.reading.length + ' passages' + (App.cam.has() ? ' + ' + App.cam.list().length * 4 + ' Cambridge tests' : '')) +
       card('listening', 'Listening', 'listen', 'The real Cambridge IELTS recordings from your Drive. Exam mode plays each recording once, as in the test.', ' · ' + App.data.books.reduce((n, b) => n + b.tests.length, 0) + ' full tests') +
-      card('writing', 'Writing', 'write', 'Task 1 charts and Task 2 essays, marked strictly against the official band descriptors.', ' · ' + (App.data.writing1.length + App.data.writing2.length) + ' prompts') +
-      card('speaking', 'Speaking', 'speak', 'Part 1, 2 and 3 questions from the May–Dec 2026 bank, with cue-card timers, speech-to-text and examiner feedback.', '') +
+      card('writing', 'Writing', 'write', 'Task 1 charts and Task 2 essays, marked strictly against the official band descriptors.', ' · ' + (App.data.writing1.length + App.data.writing2.length + App.cam.list().length * 8) + ' prompts') +
+      card('speaking', 'Speaking', 'speak', 'Part 1, 2 and 3 questions from the May–Dec 2026 bank and the Cambridge books, with cue-card timers, speech-to-text and examiner feedback.', App.cam.has() ? ' · ' + App.cam.list().length * 4 + ' Cambridge tests' : '') +
       '</div></div>';
   };
 
   window.addEventListener('hashchange', route);
   document.addEventListener('DOMContentLoaded', async () => {
     try { await App.media.loadVocab(); } catch (e) { /* no book vocabulary on this device */ }
+    try { await App.cam.load(); } catch (e) { /* no Cambridge packs on this device */ }
     App.units.build();
     if (App.sync) App.sync.run('open');
     App.applyTheme();

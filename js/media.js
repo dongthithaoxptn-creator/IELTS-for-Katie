@@ -99,9 +99,10 @@
       const s = await store('files', 'readwrite');
       const keys = await req(s.getAllKeys());
       const st = await store('files', 'readwrite');
-      await Promise.all(keys.filter(k => k.startsWith('audio/' + id + '/') || k.startsWith('books/' + id + '/') || (id === 'vocab' && k.startsWith('vocab/'))).map(k => req(st.delete(k))));
+      await Promise.all(keys.filter(k => k.startsWith('audio/' + id + '/') || k.startsWith('books/' + id + '/') || (id === 'vocab' && k.startsWith('vocab/')) || k === 'rws/' + id + '.json').map(k => req(st.delete(k))));
       await req((await store('packs', 'readwrite')).delete(id));
       if (id === 'vocab') { App.data.bookSets.length = 0; App.units.build(); }
+      if (App.cam && /^cam\d+x$/.test(id)) await App.cam.load();
       delete availCache[id]; urlCache.clear();
     },
     /* vocabulary from your books: the imported vocab pack, or vocab/sets.js beside the app on your Mac */
