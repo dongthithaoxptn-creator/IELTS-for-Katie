@@ -54,7 +54,11 @@
   document.addEventListener('DOMContentLoaded', async () => {
     try { await App.media.loadVocab(); } catch (e) { /* no book vocabulary on this device */ }
     App.units.build();
-    if (App.sync) App.sync.run('open');
+    if (App.sync) {
+      App.sync.run('open');
+      // your book words come from your private storage; refresh the screen if a new version arrived
+      App.sync.vocab().then(changed => { if (!changed) return; App.refreshNav(); const r = location.hash || '#/home'; if (/^#\/(home|progress)?$/.test(r) || /^#\/vocab(\?|$)/.test(r)) App.go(r); U.toast('Your book vocabulary is up to date'); });
+    }
     App.applyTheme();
     // Daily test on every app launch (once per session) when there are learned words
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});

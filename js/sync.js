@@ -49,6 +49,26 @@
     return { sha: (await r.json()).content.sha };
   }
 
+  /* ---------- your book vocabulary, kept in the same private storage ---------- */
+  // Downloads vocab/sets.js only when it has changed (GitHub answers 304 when it hasn't). Returns true if new words were loaded.
+  async function vocab() {
+    const c = cfg(); if (!c.token || !c.repo || !navigator.onLine || !App.media.supported) return false;
+    try {
+      const etag = await App.media.get('vocab/etag'), have = await App.media.get('vocab/sets.js');
+      const r = await gh(c, '/contents/vocab/sets.js', { headers: etag && have ? { 'If-None-Match': etag } : {} });
+      if (r.status === 304 || r.status === 404 || !r.ok) return false;
+      const j = await r.json();
+      const text = j.content && j.encoding === 'base64' ? fromB64(j.content) : await (await gh(c, '/contents/vocab/sets.js', { raw: true })).text();
+      if (!/App\.addBookSet\(/.test(text)) return false;
+      const same = typeof have === 'string' && have === text;
+      await App.media.put('vocab/sets.js', text); if (r.headers.get('ETag')) await App.media.put('vocab/etag', r.headers.get('ETag'));
+      await App.media.setPack({ id: 'vocab', title: 'Vocabulary from your books', source: 'online', version: j.sha.slice(0, 7), files: 1, bytes: text.length, ts: Date.now() });
+      if (same) return false;
+      App.data.bookSets.length = 0; await App.media.loadVocab(); App.units.build();
+      return true;
+    } catch (e) { return false; }
+  }
+
   /* ---------- merging ---------- */
   const stampV = v => v ? v.u || Math.max(v.last || 0, v.t || 0) : 0;
   const gone = (G, kind, id, ts) => G[kind] && G[kind][id] != null && G[kind][id] >= (ts || 0);
@@ -175,6 +195,7 @@
     repo: () => cfg().repo || DEFAULT_REPO,
     on(f) { listeners.add(f); return () => listeners.delete(f); },
     run,
+    vocab,
     soon() { if (!cfg().token) return; clearTimeout(timer); timer = setTimeout(() => run('auto'), 45000); },
     async connect(token, repo) {
       const c = { token: token.trim(), repo: (repo || DEFAULT_REPO).trim().replace(/^https:\/\/github\.com\//, '').replace(/\/$/, '') };
@@ -182,6 +203,7 @@
       if (r.status === 404) throw new Error('Can’t find “' + c.repo + '”. Check the key was made for that repository.');
       if (!r.ok) throw new Error('GitHub error ' + r.status);
       saveCfg(Object.assign(cfg(), c));
+      await vocab();
       return run('settings');
     },
     disconnect() { const c = cfg(); delete c.token; saveCfg(c); st.status = 'idle'; emit(); },
