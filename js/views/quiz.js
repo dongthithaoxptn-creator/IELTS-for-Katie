@@ -58,8 +58,13 @@
   }
 
   App.quiz = {
+    makeQ,
     start(v, unitIds, opt = {}) {
       const min = opt.min || +S.s.settings.quizSize || 10;
+      if (!unitIds) {
+        const units = selectDaily(min);
+        if (units.length) return App.phraseTest.run(v, units, { title: opt.title || 'Daily test', back: '#/home', quit: opt.auto ? 'Later' : 'Quit', again: () => App.quiz.start(v, null, { min }) });
+      }
       let units = unitIds ? unitIds.map(id => App.units.byId[id]).filter(Boolean) : selectDaily(min);
       if (unitIds) { while (units.length < min) units = units.concat(U.shuffle(unitIds.map(id => App.units.byId[id]))); units = units.slice(0, Math.max(min, unitIds.length)); }
       const lastType = {};
@@ -92,7 +97,7 @@
         const missed = qs.filter((q, j) => !res[j]);
         v.innerHTML = '<div class="wrap"><div class="q-card"><div class="card card-hero" style="text-align:center"><div class="eyebrow">' + U.esc(title) + ' complete</div><div class="band-big">' + ok + '/' + qs.length + '</div><p class="muted">' + (pct >= 90 ? 'Excellent — these words are sticking.' : pct >= 70 ? 'Good work. Missed items come back sooner.' : 'Keep going — missed items are scheduled for tomorrow.') + '</p></div>' +
           (missed.length ? '<div class="card"><h3>Review these</h3>' + missed.map(q => '<div style="padding:8px 0;border-bottom:1px solid var(--line)"><b>' + U.esc(q.it.en) + '</b> ' + (q.it.ipa ? '<span class="ipa">/' + U.esc(q.it.ipa) + '/</span> ' : '') + '— <span class="vi">' + U.esc(q.it.vi) + '</span><br><small>' + U.esc(q.it.ex) + '</small>' + (App.notes.has('v:' + q.u.id) ? '<div class="nt clip mini">📝 ' + U.esc(App.notes.get('v:' + q.u.id)) + '</div>' : '') + '<a class="btn sm ghost mt" href="#/vocab/item/' + encodeURIComponent(q.u.id) + '">' + I('note') + (App.notes.has('v:' + q.u.id) ? ' Open note' : ' Add a note') + '</a></div>').join('') + '</div>' : '') +
-          '<div class="row mt" style="justify-content:center"><a class="btn ghost" href="#/vocab">Vocabulary</a><button class="btn" id="again">' + I('spark') + ' Another test</button><a class="btn soft" href="#/home">Home</a></div></div></div>';
+          '<div class="row mt" style="justify-content:center"><a class="btn ghost" href="#/vocab">Vocabulary</a><a class="btn soft" href="#/quiz/phrases">Phrase test</a><button class="btn" id="again">' + I('spark') + ' Another test</button><a class="btn soft" href="#/home">Home</a></div></div></div>';
         U.$('#again', v).onclick = () => App.quiz.start(v, null, { min });
       };
       if (!qs.length) {
@@ -102,5 +107,5 @@
       show();
     }
   };
-  App.views.quiz = function (v, parts, params) { App.quiz.start(v, null, { auto: params.auto === '1', title: params.auto === '1' ? 'Welcome back — daily test' : 'Daily test' }); };
+  App.views.quiz = function (v, parts, params) { if (parts[0] === 'phrases') return App.phraseTest.setup(v); App.quiz.start(v, null, { auto: params.auto === '1', title: params.auto === '1' ? 'Welcome back — daily test' : 'Daily test' }); };
 })(window.App);

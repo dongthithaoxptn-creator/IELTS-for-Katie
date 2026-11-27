@@ -280,6 +280,17 @@ span.w.sel{background:rgba(74,163,221,.32)}
 .mic.rec{background:var(--bad);animation:pulse 1.4s infinite}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(194,58,58,.5)}70%{box-shadow:0 0 0 18px rgba(194,58,58,0)}100%{box-shadow:0 0 0 0 rgba(194,58,58,0)}}
 
+/* ---------- phrase test ---------- */
+.pt-phrase{font-family:var(--serif);font-size:1.6rem;font-weight:700;margin:12px 0 6px;color:var(--ink)}
+.pt-gap{display:inline-block;min-width:70px;border-bottom:3px solid var(--acc);color:var(--acc);text-align:center;letter-spacing:.06em}
+.pt-sentence{font-family:var(--serif);font-size:1.15rem;font-weight:500;margin:10px 0 6px;line-height:1.6}
+.pt-match{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pt-match>div{display:grid;gap:10px;align-content:start}
+.pt-match .opt{min-height:56px}
+.opt.pt-sel{border-color:var(--acc);background:var(--acc-soft);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 25%,transparent)}
+.opt.pt-done{background:var(--softer);opacity:.75}
+@media (max-width:560px){.pt-match{gap:6px}.pt-match .opt{padding:10px;font-size:.92rem}}
+
 /* ---------- my notes ---------- */
 .notes-box{margin-top:16px;background:var(--notebg);border:1px dashed var(--noteline);border-radius:14px;padding:10px 12px;color:var(--noteink)}
 .notes-box b{color:var(--noteink)} .notes-box .muted{color:var(--noteink);opacity:.7}

@@ -29,7 +29,7 @@
 
     v.innerHTML = '<div class="wrap">' +
       '<div class="card card-hero"><div class="row between" style="align-items:flex-start"><div><div class="eyebrow">' + U.esc(new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })) + '</div><h1>' + greet + '</h1><p class="muted" style="margin-bottom:14px">' + (due ? due + ' item' + (due > 1 ? 's are' : ' is') + ' due for review today.' : learned ? 'You’re up to date with reviews.' : 'Start by learning your first words, phrasal verbs or collocations.') + '</p>' +
-      '<div class="row"><a class="btn light lg" href="#/quiz">' + I('spark') + ' Daily test</a><a class="btn glass lg" href="#/vocab">' + I('plus') + ' Learn new words</a></div></div>' +
+      '<div class="row"><a class="btn light lg" href="#/quiz">' + I('spark') + ' Daily test</a><a class="btn glass lg" href="#/quiz/phrases">' + I('spark') + ' Phrase test</a><a class="btn glass lg" href="#/vocab">' + I('plus') + ' Learn new words</a></div></div>' +
       '<div style="text-align:right"><small>Words learned</small><div class="band-big">' + wl + '</div><small>' + U.pct(wl, wt) + '% of ' + wt + ' in your bank</small><div class="mt">' + countdown + '</div></div></div></div>' +
 
       '<div class="grid g4 mt">' +

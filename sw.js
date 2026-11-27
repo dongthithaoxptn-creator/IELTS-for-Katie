@@ -1,9 +1,9 @@
 /* Offline cache for IELTS Studio (network-first for app files so updates arrive; API calls are never cached) */
-const CACHE = 'ielts-studio-v23';
+const CACHE = 'ielts-studio-v25';
 const FILES = ['./', 'index.html', 'css/app.css', 'manifest.webmanifest', 'icons/katie-64.png', 'icons/katie-180.png', 'icons/katie-192.png', 'icons/katie-512.png', 'icons/katie-512-maskable.png',
   'js/core.js', 'js/dict.js', 'js/notes.js', 'js/ink.js', 'js/sync.js', 'js/ai.js', 'js/media.js', 'js/main.js',
   'js/data/vocab.js', 'js/data/phrases.js',
-  'js/views/home.js', 'js/views/vocab.js', 'js/views/quiz.js', 'js/views/progress.js', 'js/views/settings.js'];
+  'js/views/home.js', 'js/views/vocab.js', 'js/views/quiz.js', 'js/views/phrasetest.js', 'js/views/progress.js', 'js/views/settings.js'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', e => {
