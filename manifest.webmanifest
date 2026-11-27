@@ -1,7 +1,7 @@
 {
   "name": "Katie’s IELTS Studio",
   "short_name": "Katie’s IELTS",
-  "description": "Katie’s vocabulary, notes and IELTS practice for all four skills",
+  "description": "Katie’s vocabulary, phrasal verbs, collocations and notes",
   "start_url": "./index.html#/home",
   "scope": "./",
   "display": "standalone",

@@ -1,4 +1,4 @@
-/* My notes — write notes on any exercise, book unit or word; see them again when you come back or review */
+/* My notes — write notes on any word or book unit; see them again when you come back or review */
 (function (App) {
   'use strict';
   const U = App.util, S = App.store, I = App.icon;
@@ -117,10 +117,10 @@
   App.views.notes = function (v) {
     const L = N.list();
     const kinds = Object.keys(KINDS).filter(k => L.some(n => n.kind === k));
-    v.innerHTML = '<div class="wrap" style="max-width:980px"><div class="page-head"><div><div class="eyebrow">You</div><h1>My notes</h1><p>' + (L.length ? L.length + ' note' + (L.length > 1 ? 's' : '') + ' from your practice. Tap a title to go back to that exercise.' : 'Notes you write in exercises and vocabulary appear here.') + '</p></div></div>' +
+    v.innerHTML = '<div class="wrap" style="max-width:980px"><div class="page-head"><div><div class="eyebrow">You</div><h1>My notes</h1><p>' + (L.length ? L.length + ' note' + (L.length > 1 ? 's' : '') + ' from your practice. Tap a title to go back to that exercise.' : 'Notes you write on words and book units appear here.') + '</p></div></div>' +
       (L.length ? '<div class="row mb"><input class="input" id="nq" placeholder="Search your notes…" value="' + U.esc(ui.q) + '" style="flex:1;min-width:200px"></div>' +
         '<div class="tabs"><button data-k="" class="' + (!ui.kind ? 'on' : '') + '">All</button>' + kinds.map(k => '<button data-k="' + k + '" class="' + (ui.kind === k ? 'on' : '') + '">' + KINDS[k] + '</button>').join('') + '</div><div id="nl"></div>'
-        : '<div class="card empty"><div style="font-size:2.4rem">📝</div><h2>No notes yet</h2><p>While you practise, tap <b>Add notes</b> (bottom right) in any Reading, Listening, Writing or Speaking exercise.<br>Book units and words have a notes box too. When you come back to review, your notes are waiting for you.</p><div class="row" style="justify-content:center"><a class="btn" href="#/vocab">Vocabulary</a><a class="btn ghost" href="#/ielts">IELTS practice</a></div></div>') + '</div>';
+        : '<div class="card empty"><div style="font-size:2.4rem">📝</div><h2>No notes yet</h2><p>Every word, phrasal verb, collocation and book unit has a notes box: type, or tap <b>Handwrite</b> to write with your Pencil.<br>Your notes come back when you review the word or the unit.</p><div class="row" style="justify-content:center"><a class="btn" href="#/vocab?tab=b">Your books</a><a class="btn ghost" href="#/vocab">Vocabulary</a></div></div>') + '</div>';
     if (!L.length) return;
     const draw = () => {
       const q = U.norm(ui.q);

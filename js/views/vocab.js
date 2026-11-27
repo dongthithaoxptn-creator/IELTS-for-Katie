@@ -67,7 +67,7 @@
   }
   function saved() {
     const L = S.s.saved;
-    if (!L.length) return '<div class="empty">Tap any word in a Reading passage, Listening transcript or question, then press <b>Save</b>. Your saved words appear here.</div>';
+    if (!L.length) return '<div class="empty">Tap any word in an example sentence (on a word card, in a unit or in the daily test), then press <b>Save</b>. Your saved words appear here.</div>';
     return L.slice().reverse().map((w, ri) => { const i = L.length - 1 - ri; return '<div class="list-item"><div class="grow"><h3>' + U.esc(w.w) + ' <span class="ipa">' + (w.ipa ? '/' + U.esc(w.ipa) + '/' : '') + '</span></h3>' + (w.vi ? '<div class="vi">' + U.esc(w.vi) + '</div>' : '') + (w.def ? '<div>' + U.esc(w.def) + '</div>' : '') + (w.ctx ? '<small>“' + U.esc(w.ctx) + '”</small>' : '') + '</div><div class="row">' + say(w.w) + '<button class="icon-btn" data-del="' + i + '" aria-label="Remove">' + I('x') + '</button></div></div>'; }).join('');
   }
 
